@@ -1,0 +1,2477 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Kumpul.Yuk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --bg: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-muted: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      --border: rgba(0,0,0,0.08);
+      --border-strong: rgba(0,0,0,0.18);
+      --primary: #0e7490;
+      --primary-light: rgba(14,116,144,0.12);
+      --gradient: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%);
+      --success: #059669;
+      --success-light: rgba(5,150,105,0.12);
+      --danger: #dc2626;
+      --danger-light: rgba(220,38,38,0.12);
+      --warning: #ea580c;
+      --orange-light: rgba(234,88,12,0.1);
+      --blue-light: rgba(37,99,235,0.1);
+      --shadow-sm: 0 1px 4px rgba(0,0,0,0.07);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
+      --shadow-primary: 0 4px 20px rgba(14,116,144,0.28);
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-muted: #172033;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.18);
+      --primary: #22d3ee;
+      --primary-light: rgba(34,211,238,0.15);
+      --success: #34d399;
+      --success-light: rgba(52,211,153,0.15);
+      --danger: #f87171;
+      --danger-light: rgba(248,113,113,0.15);
+      --warning: #fb923c;
+      --orange-light: rgba(251,146,60,0.15);
+      --blue-light: rgba(99,179,237,0.15);
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #app { max-width: 768px; margin: 0 auto; min-height: 100vh; }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      height: 58px; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .navbar-logo {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--gradient); display: flex; align-items: center;
+      justify-content: center; color: white; font-weight: 800; font-size: 16px;
+    }
+    .navbar-title { font-size: 18px; font-weight: 800; color: var(--text); }
+    .navbar-title span { color: var(--primary); }
+    .navbar-actions { display: flex; align-items: center; gap: 2px; }
+    .icon-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      border: none; background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); transition: background .15s, color .15s;
+    }
+    .icon-btn:hover { background: var(--bg-muted); color: var(--text); }
+
+    /* ── Page header ── */
+    .page-header {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .back-btn {
+      width: 34px; height: 34px; border-radius: 10px;
+      border: none; background: var(--bg-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); flex-shrink: 0;
+    }
+    .page-header h1 { font-size: 16px; font-weight: 700; }
+
+    /* ── Hero card ── */
+    .hero {
+      background: var(--gradient); border-radius: 24px; padding: 24px;
+      color: white; position: relative; overflow: hidden;
+      box-shadow: var(--shadow-primary);
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 200px; height: 200px; background: rgba(255,255,255,0.1);
+      border-radius: 50%; filter: blur(40px);
+    }
+    .hero-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
+    .hero-amount { font-size: 36px; font-weight: 800; letter-spacing: -.02em; margin: 4px 0 2px; }
+    .hero-sub { font-size: 13px; opacity: .8; }
+    .prog-wrap { background: rgba(0,0,0,.15); border-radius: 99px; height: 6px; margin-top: 18px; overflow: hidden; }
+    .prog-bar { height: 100%; background: white; border-radius: 99px; }
+    .prog-pct { text-align: right; font-size: 11px; font-weight: 700; opacity: .9; margin-top: 4px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg-card); border-radius: 20px;
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Filter ── */
+    .search-wrap { position: relative; }
+    .search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    .search-inp, .sel-inp {
+      width: 100%; background: var(--bg-muted);
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-family: var(--font); font-size: 14px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .search-inp { padding: 11px 12px 11px 40px; }
+    .search-inp:focus, .sel-inp:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    .sel-inp { padding: 8px 10px; cursor: pointer; flex-shrink: 0; }
+
+    /* ── Nasabah grid ── */
+    .nasabah-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 560px) { .nasabah-grid { grid-template-columns: 1fr 1fr; } }
+    .nasabah-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 16px; cursor: pointer;
+      transition: border-color .15s, box-shadow .15s, transform .1s;
+      box-shadow: var(--shadow-sm); position: relative;
+    }
+    .nasabah-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+    .nasabah-card:active { transform: scale(.98); }
+
+    /* ── Avatar ── */
+    .avatar {
+      border-radius: 12px; display: flex; align-items: center;
+      justify-content: center; color: white; font-weight: 700; flex-shrink: 0;
+    }
+    .av-sm { width: 42px; height: 42px; font-size: 13px; }
+    .av-lg { width: 60px; height: 60px; font-size: 20px; border-radius: 16px; }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 6px; font-size: 11px; font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .b-aktif { background: var(--success-light); color: var(--success); border-color: rgba(5,150,105,.2); }
+    .b-nonaktif { background: var(--bg-muted); color: var(--text-muted); border-color: var(--border); }
+    .b-cair { background: var(--primary-light); color: var(--primary); border-color: rgba(14,116,144,.2); }
+    .b-tunai { background: var(--orange-light); color: var(--warning); border-color: rgba(234,88,12,.2); }
+    .b-transfer { background: var(--blue-light); color: #2563eb; border-color: rgba(37,99,235,.2); }
+    [data-theme="dark"] .b-transfer { color: #93c5fd; }
+    .b-cairlist { background: var(--success-light); color: var(--success); }
+
+    /* ── Dropdown ── */
+    .dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; right: 0; top: calc(100% + 4px);
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; box-shadow: var(--shadow-lg);
+      min-width: 140px; z-index: 200; overflow: hidden;
+      animation: fadeIn .1s ease;
+    }
+    .dd-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; font-size: 13px; font-weight: 500;
+      cursor: pointer; color: var(--text); border: none;
+      background: none; width: 100%; text-align: left;
+      transition: background .1s;
+    }
+    .dd-item:hover { background: var(--bg-muted); }
+    .dd-item.danger { color: var(--danger); }
+    .dd-item.danger:hover { background: var(--danger-light); }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--gradient); color: white; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-primary); z-index: 40;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .fab:hover { transform: scale(1.06); }
+    .fab:active { transform: scale(.95); }
+
+    /* ── Forms ── */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
+    .form-ctrl {
+      width: 100%; padding: 11px 14px;
+      background: var(--bg-muted); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-family: var(--font); font-size: 14px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-ctrl:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .form-ctrl.invalid { border-color: var(--danger); }
+    .form-err { font-size: 12px; color: var(--danger); font-weight: 500; min-height: 16px; }
+    textarea.form-ctrl { resize: vertical; min-height: 80px; }
+    .form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 460px) { .form-grid2 { grid-template-columns: 1fr; } }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 18px; border-radius: 12px;
+      font-family: var(--font); font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .15s;
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-primary { background: var(--gradient); color: white; box-shadow: var(--shadow-primary); }
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 6px 24px rgba(14,116,144,.45); transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border-strong); }
+    .btn-outline:hover:not(:disabled) { background: var(--bg-muted); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-ghost { background: transparent; color: var(--text-muted); }
+    .btn-ghost:hover { background: var(--bg-muted); color: var(--text); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+    .btn-lg { padding: 14px 20px; font-size: 15px; border-radius: 14px; }
+    .btn-full { width: 100%; }
+    .btn-icon { padding: 7px; border-radius: 8px; width: 32px; height: 32px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      display: flex; align-items: flex-end; justify-content: center;
+      animation: fadeIn .15s ease;
+    }
+    @media (min-width: 500px) { .modal-overlay { align-items: center; } }
+    .modal {
+      background: var(--bg-card); border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto;
+      animation: slideUp .2s ease;
+    }
+    @media (min-width: 500px) { .modal { border-radius: 24px; max-height: 88vh; } }
+    .modal-hdr {
+      padding: 18px 20px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; background: var(--bg-card); z-index: 1;
+    }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-body { padding: 20px; }
+
+    /* ── Confirm modal ── */
+    .confirm-wrap {
+      max-width: 360px; text-align: center; padding: 28px 24px 24px;
+      border-radius: 24px; margin: 16px;
+    }
+    .confirm-ico { width: 56px; height: 56px; background: var(--danger-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--danger); }
+    .confirm-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .confirm-desc { font-size: 14px; color: var(--text-muted); line-height: 1.55; }
+    .confirm-name { font-weight: 700; color: var(--text); }
+    .confirm-btns { display: flex; gap: 10px; margin-top: 22px; }
+
+    /* ── Detail hero ── */
+    .detail-hero {
+      background: var(--gradient); padding: 20px 16px 80px;
+      position: relative; overflow: hidden;
+    }
+    .detail-hero::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 180px; height: 180px; background: rgba(255,255,255,.1);
+      border-radius: 50%; filter: blur(30px);
+    }
+    .detail-content { padding: 0 16px; margin-top: -64px; position: relative; z-index: 10; padding-bottom: 100px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .stat-box {
+      background: rgba(0,0,0,.2); backdrop-filter: blur(8px);
+      border-radius: 12px; padding: 10px 6px; text-align: center;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .stat-lbl { font-size: 9px; text-transform: uppercase; font-weight: 700; color: rgba(255,255,255,.6); margin-bottom: 3px; }
+    .stat-val { font-size: 13px; font-weight: 700; color: white; }
+
+    /* ── Setoran list ── */
+    .setoran-list { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    .setoran-row {
+      position: relative; overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .setoran-row:last-child { border-bottom: none; }
+    .setoran-actions {
+      position: absolute; right: 0; top: 0; bottom: 0;
+      display: flex; align-items: stretch;
+      transform: translateX(100%);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+      z-index: 1;
+    }
+    .setoran-row.swiped .setoran-actions { transform: translateX(0); }
+    .setoran-row.swiped .setoran-item { transform: translateX(-112px); }
+    .sa-btn {
+      width: 56px; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 3px; border: none; cursor: pointer;
+      font-size: 10px; font-weight: 700; letter-spacing: .03em;
+    }
+    .sa-edit { background: var(--primary); color: white; }
+    .sa-del  { background: var(--danger);  color: white; }
+    .setoran-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 16px;
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+      background: var(--bg-card); position: relative; z-index: 2;
+      user-select: none;
+    }
+    .s-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--bg-muted); color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .foto-thumb {
+      width: 38px; height: 38px; border-radius: 10px;
+      overflow: hidden; border: 1px solid rgba(37,99,235,.3);
+      cursor: pointer; flex-shrink: 0;
+    }
+    .foto-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── Progress big ── */
+    .prog-big { height: 10px; background: var(--bg-muted); border-radius: 99px; overflow: hidden; }
+    .prog-big-fill { height: 100%; border-radius: 99px; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 48px 24px; }
+    .empty-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .empty-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Drawer ── */
+    .drawer-ov { position: fixed; inset: 0; z-index: 150; background: rgba(0,0,0,.5); animation: fadeIn .15s ease; }
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 230px;
+      background: var(--bg-card); box-shadow: var(--shadow-lg);
+      z-index: 151; animation: slideLeft .2s ease; padding: 70px 0 0;
+    }
+    .drawer-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 20px; font-size: 14px; font-weight: 600;
+      cursor: pointer; color: var(--text); border: none;
+      background: none; width: 100%; text-align: left; transition: background .1s;
+    }
+    .drawer-item:hover { background: var(--bg-muted); }
+    .drawer-item.active { color: var(--primary); background: var(--primary-light); }
+
+    /* ── Upload area ── */
+    .upload-area {
+      border: 2px dashed var(--border-strong); border-radius: 14px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 6px; color: var(--text-muted);
+      cursor: pointer; transition: border-color .15s, color .15s; padding: 20px;
+    }
+    .upload-area:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Pencairan ── */
+    .pencairan-hero {
+      background: var(--gradient); border-radius: 24px; padding: 22px;
+      color: white; position: relative; overflow: hidden; box-shadow: var(--shadow-primary);
+    }
+    .pencairan-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; background: rgba(255,255,255,.1); border-radius: 50%; filter: blur(30px); }
+    .pencairan-item {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 14px 16px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px;
+      box-shadow: var(--shadow-sm); transition: box-shadow .15s, border-color .15s, transform .1s;
+    }
+    .pencairan-item:hover { box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .pencairan-item:active { transform: scale(.99); }
+    .p-ico { width: 42px; height: 42px; border-radius: 12px; background: var(--success-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--success); }
+
+    /* ── Settings ── */
+    .settings-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 22px; box-shadow: var(--shadow-sm); }
+    .settings-danger { background: var(--danger-light); border: 1px solid rgba(220,38,38,.25); border-radius: 24px; padding: 22px; }
+    .s-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; }
+
+    /* ── Info row (in hero) ── */
+    .info-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(255,255,255,.8); }
+
+    /* ── Animations ── */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+    /* ── Utilities ── */
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .mb-1 { margin-bottom: 4px; }
+    .mb-2 { margin-bottom: 8px; }
+    .mb-3 { margin-bottom: 12px; }
+    .mb-4 { margin-bottom: 16px; }
+    .mb-5 { margin-bottom: 20px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .mt-4 { margin-top: 16px; }
+    .p-4 { padding: 16px; }
+    .p-5 { padding: 20px; }
+    .space-y > * + * { margin-top: 16px; }
+    .space-y-3 > * + * { margin-top: 12px; }
+    .text-sm { font-size: 14px; }
+    .text-xs { font-size: 12px; }
+    .text-2xs { font-size: 10px; }
+    .font-bold { font-weight: 700; }
+    .font-extrabold { font-weight: 800; }
+    .text-primary { color: var(--primary); }
+    .text-muted { color: var(--text-muted); }
+    .text-success { color: var(--success); }
+    .text-danger { color: var(--danger); }
+    .text-warning { color: var(--warning); }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .w-full { width: 100%; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .relative { position: relative; }
+    .min-w-0 { min-width: 0; }
+    .flex-1 { flex: 1; }
+    .shrink-0 { flex-shrink: 0; }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="modals"></div>
+
+  <script>
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 1 — SVG ICONS
+  // ════════════════════════════════════════════════════════════
+  const I = {
+    search: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+    plus: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
+    plus16: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
+    moon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+    sun: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+    menu: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+    back: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`,
+    chevR: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+    edit: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    trash: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+    phone: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.59 1.2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.29 6.29l1.82-1.82a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+    mapPin: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    calendar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    receipt: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg>`,
+    shield: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`,
+    building: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+    download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+    fileText: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+    upload: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+    history: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>`,
+    trendDown: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>`,
+    imgPlus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="16" y1="5" x2="22" y2="5"/><line x1="19" y1="2" x2="19" y2="8"/></svg>`,
+    x: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+    zoomIn: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`,
+    more: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg>`,
+    alert: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    settings: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+    home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  };
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 2 — UTILITIES
+  // ════════════════════════════════════════════════════════════
+  const AVATAR_COLORS = ['#e11d48','#f59e0b','#0d9488','#0ea5e9','#7c3aed','#db2777','#4f46e5','#65a30d','#0891b2','#ea580c'];
+
+  function genId() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+  function formatRp(n) {
+    return 'Rp\u00a0' + Number(n || 0).toLocaleString('id-ID');
+  }
+
+  function toRawNumber(str) { return str.replace(/\./g, '').replace(/[^0-9]/g, ''); }
+  function onNominalInput(el) {
+    const pos = el.selectionStart, oldLen = el.value.length;
+    const raw = toRawNumber(el.value);
+    el.value = raw ? Number(raw).toLocaleString('id-ID') : '';
+    const diff = el.value.length - oldLen;
+    try { el.setSelectionRange(pos + diff, pos + diff); } catch(_) {}
+  }
+  function getNominalValue(el) { return Number(toRawNumber(el.value)) || 0; }
+
+  function formatDate(str) {
+    if (!str) return '—';
+    const d = new Date(str);
+    if (isNaN(d)) return str;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+  function getInitials(name) {
+    return (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  }
+
+  function getAvatarColor(name) {
+    return AVATAR_COLORS[((name || ' ').charCodeAt(0)) % AVATAR_COLORS.length];
+  }
+
+  function diffDays(dateStr) {
+    if (!dateStr) return 0;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const target = new Date(y, m-1, d);
+    return Math.ceil((target - today) / 86400000);
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg, type) {
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+      background:${type==='error'?'#dc2626':'#0e7490'};color:white;
+      padding:10px 20px;border-radius:99px;font-size:14px;font-weight:600;
+      box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;animation:slideUp .2s ease;
+      white-space:nowrap;font-family:var(--font);`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2800);
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 3 — DATABASE (localStorage)
+  // ════════════════════════════════════════════════════════════
+  const PFX = 'ky1_';
+
+  function dbGet(key) {
+    try { return JSON.parse(localStorage.getItem(PFX + key) || '[]'); } catch { return []; }
+  }
+  function dbSet(key, val) { localStorage.setItem(PFX + key, JSON.stringify(val)); }
+  function dbGetObj(key) {
+    try { return JSON.parse(localStorage.getItem(PFX + key) || '{}'); } catch { return {}; }
+  }
+  function dbSetObj(key, val) { localStorage.setItem(PFX + key, JSON.stringify(val)); }
+
+  const db = {
+    getNasabahList() { return dbGet('nasabah'); },
+    getNasabah(id) { return this.getNasabahList().find(n => n.id === id); },
+    createNasabah(data) {
+      const item = { ...data, id: genId() };
+      dbSet('nasabah', [...this.getNasabahList(), item]);
+      return item;
+    },
+    updateNasabah(id, data) {
+      const list = this.getNasabahList().map(n => n.id === id ? { ...n, ...data } : n);
+      dbSet('nasabah', list);
+      return list.find(n => n.id === id);
+    },
+    deleteNasabah(id) {
+      dbSet('nasabah', this.getNasabahList().filter(n => n.id !== id));
+      dbSet('setoran', dbGet('setoran').filter(s => s.nasabah_id !== id));
+      dbSet('pencairan', dbGet('pencairan').filter(p => p.nasabah_id !== id));
+    },
+    getSetoranList(nasabahId) {
+      const all = dbGet('setoran');
+      return nasabahId ? all.filter(s => s.nasabah_id === nasabahId) : all;
+    },
+    createSetoran(data) {
+      const item = { ...data, id: genId(), created_at: new Date().toISOString() };
+      dbSet('setoran', [...dbGet('setoran'), item]);
+      return item;
+    },
+    updateSetoran(id, data) {
+      const list = dbGet('setoran').map(s => s.id === id ? { ...s, ...data } : s);
+      dbSet('setoran', list);
+    },
+    deleteSetoran(id) { dbSet('setoran', dbGet('setoran').filter(s => s.id !== id)); },
+    getPencairanList(nasabahId) {
+      const all = dbGet('pencairan');
+      return nasabahId ? all.filter(p => p.nasabah_id === nasabahId) : all;
+    },
+    createPencairan(data) {
+      const item = { ...data, id: genId(), created_at: new Date().toISOString() };
+      dbSet('pencairan', [...dbGet('pencairan'), item]);
+      this.updateNasabah(data.nasabah_id, { status: 'cair' });
+      return item;
+    },
+    getSetting() { return dbGetObj('setting'); },
+    saveSetting(data) { dbSetObj('setting', data); },
+    exportData() {
+      return { nasabah: this.getNasabahList(), setoran: this.getSetoranList(), pencairan: this.getPencairanList(), setting: this.getSetting(), exported_at: new Date().toISOString() };
+    },
+    importData(data) {
+      if (data.nasabah) dbSet('nasabah', data.nasabah);
+      if (data.setoran) dbSet('setoran', data.setoran);
+      if (data.pencairan) dbSet('pencairan', data.pencairan);
+      if (data.setting) dbSetObj('setting', data.setting);
+    },
+    resetData() { ['nasabah','setoran','pencairan'].forEach(k => dbSet(k, [])); },
+    seedIfNeeded() {
+      if (this.getNasabahList().length > 0) return;
+      const ids = [genId(), genId(), genId()];
+      dbSet('nasabah', [
+        { id: ids[0], nama: 'Ahmad Fauzi', hp: '081234567890', alamat: 'Jl. Mawar No.5, Jakarta', target: 1500000, cairkan: '2026-06-30', daftar: '2025-12-01', catatan: '', status: 'aktif' },
+        { id: ids[1], nama: 'Siti Rahmawati', hp: '082345678901', alamat: 'Jl. Melati No.12, Bekasi', target: 2000000, cairkan: '2026-06-30', daftar: '2025-12-05', catatan: '', status: 'aktif' },
+        { id: ids[2], nama: 'Budi Santoso', hp: '083456789012', alamat: 'Jl. Anggrek No.3, Depok', target: 1000000, cairkan: '2026-06-30', daftar: '2026-01-03', catatan: 'Bayar tiap awal bulan', status: 'aktif' },
+      ]);
+      dbSet('setoran', [
+        { nasabah_id: ids[0], nominal: 300000, metode: 'tunai', tanggal: '2026-01-10', catatan: '' },
+        { nasabah_id: ids[0], nominal: 250000, metode: 'transfer', tanggal: '2026-02-08', catatan: 'via BCA' },
+        { nasabah_id: ids[0], nominal: 200000, metode: 'tunai', tanggal: '2026-03-05', catatan: '' },
+        { nasabah_id: ids[1], nominal: 400000, metode: 'transfer', tanggal: '2026-01-12', catatan: '' },
+        { nasabah_id: ids[1], nominal: 350000, metode: 'tunai', tanggal: '2026-02-15', catatan: '' },
+        { nasabah_id: ids[1], nominal: 300000, metode: 'transfer', tanggal: '2026-03-10', catatan: 'via BRI' },
+        { nasabah_id: ids[2], nominal: 200000, metode: 'tunai', tanggal: '2026-02-05', catatan: '' },
+      ].map(s => ({ ...s, id: genId(), created_at: new Date().toISOString() })));
+    },
+  };
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 4 — APP STATE
+  // ════════════════════════════════════════════════════════════
+  let S = {
+    page: 'dashboard',   // 'dashboard' | 'detail' | 'form' | 'pencairan' | 'settings'
+    nasabahId: null,
+    isEdit: false,
+    search: '',
+    filterStatus: 'semua',
+    sortBy: 'deadline',
+    editMode: false,
+    drawer: false,
+    setoranModal: false,
+    setoranEditId: null,
+    pencairanModal: false,
+    confirm: null,       // { title, desc, name, onConfirm }
+    lightbox: null,      // image src string
+    dropdownId: null,
+    theme: localStorage.getItem(PFX + 'ui_theme') || 'light',
+  };
+
+  // Setoran form draft — kept outside state to survive re-renders
+  let _draft = null;
+
+  function setState(updates) {
+    Object.assign(S, updates);
+    renderAll();
+  }
+
+  function go(page, params, fromPopState) {
+    params = params || {};
+    S.page = page;
+    S.nasabahId = params.id || null;
+    S.isEdit = !!params.isEdit;
+    S.editMode = false;
+    S.dropdownId = null;
+    S.drawer = false;
+    S.setoranModal = false;
+    S.pencairanModal = false;
+    if (!fromPopState) {
+      history.pushState({ page, params }, '', '#' + page + (params.id ? '/' + params.id : ''));
+    }
+    renderAll();
+    window.scrollTo(0, 0);
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 5 — RENDER ENGINE
+  // ════════════════════════════════════════════════════════════
+  function renderAll() {
+    document.getElementById('app').innerHTML = buildPage();
+    document.getElementById('modals').innerHTML = buildModals();
+    if (S.page === 'detail') initSwipe();
+  }
+
+  function buildPage() {
+    if (S.page === 'detail')    return buildDetail();
+    if (S.page === 'form')      return buildForm();
+    if (S.page === 'pencairan') return buildPencairan();
+    if (S.page === 'settings')  return buildSettings();
+    return buildDashboard();
+  }
+
+  function navbar() {
+    return `<nav class="navbar">
+      <div class="navbar-brand" onclick="go('dashboard')">
+        <div class="navbar-logo">K</div>
+        <span class="navbar-title">Kumpul<span>.</span>Yuk</span>
+      </div>
+      <div class="navbar-actions">
+        <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Ganti tema">
+          ${S.theme === 'dark' ? I.sun : I.moon}
+        </button>
+        <button class="icon-btn" onclick="setState({drawer:true})" title="Menu">
+          ${I.menu}
+        </button>
+      </div>
+    </nav>`;
+  }
+
+  function pageHeader(title, backFn) {
+    return `<div class="page-header">
+      <button class="back-btn" onclick="${backFn}">${I.back}</button>
+      <h1>${esc(title)}</h1>
+    </div>`;
+  }
+
+  function statusBadge(status) {
+    if (status === 'cair') return `<span class="badge b-cair">Cair</span>`;
+    if (status === 'non-aktif') return `<span class="badge b-nonaktif">Non-aktif</span>`;
+    return `<span class="badge b-aktif">Aktif</span>`;
+  }
+
+  function buildNasabahListSection() {
+    const nasabahList = db.getNasabahList();
+    const setoranAll = db.getSetoranList();
+    let list = [...nasabahList];
+    if (S.search) {
+      const q = S.search.toLowerCase();
+      list = list.filter(n => n.nama.toLowerCase().includes(q) || n.hp.includes(q));
+    }
+    if (S.filterStatus !== 'semua') list = list.filter(n => n.status === S.filterStatus);
+    list.sort((a, b) => {
+      if (S.sortBy === 'nama') return a.nama.localeCompare(b.nama);
+      if (S.sortBy === 'deadline') return new Date(a.cairkan) - new Date(b.cairkan);
+      const tA = setoranAll.filter(s => s.nasabah_id === a.id).reduce((x, s) => x + s.nominal, 0);
+      const tB = setoranAll.filter(s => s.nasabah_id === b.id).reduce((x, s) => x + s.nominal, 0);
+      const pA = a.target > 0 ? tA / a.target : 0;
+      const pB = b.target > 0 ? tB / b.target : 0;
+      return S.sortBy === 'prog-desc' ? pB - pA : pA - pB;
+    });
+
+    let listHtml = '';
+    if (list.length === 0) {
+      listHtml = `<div class="empty">
+        <div style="font-size:48px;margin-bottom:12px;color:var(--text-subtle)">👤</div>
+        <div class="empty-title">${S.search ? 'Tidak Ditemukan' : 'Belum Ada Nasabah'}</div>
+        <div class="empty-desc">${S.search ? 'Coba ubah kata kunci pencarian.' : 'Mulai kelola tabungan dengan menambahkan nasabah pertama.'}</div>
+        ${!S.search ? `<div style="margin-top:16px"><button class="btn btn-primary" onclick="go('form')">${I.plus16} Tambah Nasabah</button></div>` : ''}
+      </div>`;
+    } else {
+      const cards = list.map(n => {
+        const terkumpul = setoranAll.filter(s => s.nasabah_id === n.id).reduce((a, s) => a + s.nominal, 0);
+        const p = n.target > 0 ? Math.min(100, Math.round(terkumpul / n.target * 100)) : 0;
+        const d = diffDays(n.cairkan);
+        const dClass = d < 0 ? 'text-danger' : d <= 7 ? 'text-warning' : 'text-muted';
+        const dText = d < 0 ? 'Lewat' : `${d} hari lagi`;
+        const barColor = p >= 100 ? 'var(--success)' : 'var(--primary)';
+        const ddOpen = S.dropdownId === n.id;
+        return `
+          <div class="nasabah-card" onclick="go('detail',{id:'${n.id}'})">
+            <div class="flex justify-between items-start mb-3">
+              <div class="flex items-center gap-2">
+                <div class="avatar av-sm" style="background:${getAvatarColor(n.nama)}">${getInitials(n.nama)}</div>
+                <div>
+                  <div class="font-bold text-sm">${esc(n.nama)}</div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-xs text-muted">${esc(n.hp)}</span>
+                    ${statusBadge(n.status)}
+                  </div>
+                </div>
+              </div>
+              <div class="dropdown" onclick="event.stopPropagation()">
+                <button class="icon-btn btn-sm" onclick="toggleDropdown('${n.id}')">${I.more}</button>
+                ${ddOpen ? `<div class="dropdown-menu">
+                  <button class="dd-item" onclick="event.stopPropagation();closeDropdown();go('form',{id:'${n.id}',isEdit:true})">${I.edit} Edit</button>
+                  <button class="dd-item danger" onclick="event.stopPropagation();closeDropdown();confirmDeleteNasabah('${n.id}','${esc(n.nama)}')">${I.trash} Hapus</button>
+                </div>` : ''}
+              </div>
+            </div>
+            <div class="flex justify-between items-end mt-3">
+              <div>
+                <div class="text-2xs" style="text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--text-muted);margin-bottom:3px">Terkumpul</div>
+                <div class="font-extrabold" style="font-size:18px">${formatRp(terkumpul)}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-muted">Target <span class="font-bold" style="color:var(--text)">${formatRp(n.target)}</span></div>
+              </div>
+            </div>
+            <div class="mt-2">
+              <div class="prog-wrap"><div class="prog-bar" style="width:${p}%;background:${barColor}"></div></div>
+              <div class="flex justify-between mt-2 text-xs">
+                <span class="font-bold text-primary">${p}%</span>
+                <span class="font-bold ${dClass}">${dText}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+      listHtml = `<div class="nasabah-grid">${cards}</div>`;
+    }
+
+    return `
+      <div class="flex justify-between items-center mb-3">
+        <span style="font-size:17px;font-weight:700">Daftar Nasabah</span>
+        <span class="text-xs font-bold text-muted" style="background:var(--bg-muted);padding:3px 8px;border-radius:6px">${list.length} orang</span>
+      </div>
+      ${listHtml}`;
+  }
+
+  function renderNasabahList() {
+    const el = document.getElementById('nasabah-list-section');
+    if (el) {
+      el.innerHTML = buildNasabahListSection();
+    } else {
+      renderAll();
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 5b — SWIPE GESTURE (setoran items)
+  // ════════════════════════════════════════════════════════════
+  let _swipedRow = null;
+
+  function closeSwiped() {
+    if (_swipedRow) { _swipedRow.classList.remove('swiped'); _swipedRow = null; }
+  }
+
+  function initSwipe() {
+    const list = document.getElementById('setoran-list');
+    if (!list) return;
+    list.addEventListener('touchstart', onTouchStart, { passive: true });
+    list.addEventListener('touchmove',  onTouchMove,  { passive: false });
+    list.addEventListener('touchend',   onTouchEnd,   { passive: true });
+    // Tap outside swipe-open row to close it
+    document.addEventListener('touchstart', (e) => {
+      if (_swipedRow && !_swipedRow.contains(e.target)) closeSwiped();
+    }, { passive: true });
+  }
+
+  let _tx = 0, _ty = 0, _targetRow = null, _scrolling = null;
+
+  function onTouchStart(e) {
+    const touch = e.touches[0];
+    _tx = touch.clientX; _ty = touch.clientY;
+    _scrolling = null;
+    _targetRow = e.target.closest('.setoran-row');
+  }
+
+  function onTouchMove(e) {
+    if (!_targetRow) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - _tx;
+    const dy = touch.clientY - _ty;
+    if (_scrolling === null) _scrolling = Math.abs(dy) > Math.abs(dx);
+    if (_scrolling) return;
+    e.preventDefault();
+    if (dx < -8) {
+      if (_swipedRow && _swipedRow !== _targetRow) closeSwiped();
+    }
+  }
+
+  function onTouchEnd(e) {
+    if (!_targetRow || _scrolling) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - _tx;
+    if (dx < -40) {
+      if (_swipedRow && _swipedRow !== _targetRow) closeSwiped();
+      _targetRow.classList.add('swiped');
+      _swipedRow = _targetRow;
+    } else if (dx > 20 && _swipedRow === _targetRow) {
+      closeSwiped();
+    }
+    _targetRow = null;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 6 — DASHBOARD
+  // ════════════════════════════════════════════════════════════
+  function buildDashboard() {
+    const nasabahList = db.getNasabahList();
+    const setoranAll = db.getSetoranList();
+    const pencairanAll = db.getPencairanList();
+
+    const totalTarget = nasabahList.reduce((a, n) => a + Number(n.target), 0);
+    const totalKumpul = setoranAll.reduce((a, s) => a + Number(s.nominal), 0);
+    const pct = totalTarget > 0 ? Math.min(100, Math.round(totalKumpul / totalTarget * 100)) : 0;
+
+    const jumlahAktif = nasabahList.filter(n => n.status === 'aktif').length;
+    const jumlahCair  = nasabahList.filter(n => n.status === 'cair').length;
+    const totalDicairkan = pencairanAll.reduce((a, p) => a + Number(p.nominal), 0);
+    const deadlineTerdekat = nasabahList
+      .filter(n => n.status === 'aktif' && n.cairkan)
+      .sort((a, b) => new Date(a.cairkan) - new Date(b.cairkan))[0];
+    const deadlineLabel = deadlineTerdekat
+      ? deadlineTerdekat.nama.split(' ')[0]
+      : '—';
+    const deadlineSub = deadlineTerdekat ? formatDate(deadlineTerdekat.cairkan) : '';
+
+    const heroHtml = `
+      <div class="hero">
+        <p class="hero-label">Total Terkumpul</p>
+        <h2 class="hero-amount">${formatRp(totalKumpul)}</h2>
+        <p class="hero-sub">dari target ${formatRp(totalTarget)}</p>
+        <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+        <div class="prog-pct">${pct}%</div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr 1px 1fr;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)">
+          <div style="text-align:center;padding:0 4px">
+            <div style="font-size:18px;font-weight:800;color:white;line-height:1">${jumlahAktif}</div>
+            <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.06em;margin-top:4px">Aktif</div>
+          </div>
+          <div style="background:rgba(255,255,255,.2);height:28px;border-radius:99px"></div>
+          <div style="text-align:center;padding:0 4px">
+            <div style="font-size:18px;font-weight:800;color:white;line-height:1">${jumlahCair}</div>
+            <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.06em;margin-top:4px">Cair</div>
+          </div>
+          <div style="background:rgba(255,255,255,.2);height:28px;border-radius:99px"></div>
+          <div style="text-align:center;padding:0 4px">
+            <div style="font-size:13px;font-weight:800;color:white;line-height:1;margin-top:2px">${totalDicairkan > 0 ? 'Rp\u00a0' + (totalDicairkan >= 1000000 ? (totalDicairkan/1000000).toFixed(1).replace('.0','') + 'jt' : (totalDicairkan/1000).toFixed(0) + 'rb') : '—'}</div>
+            <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.06em;margin-top:4px">Dicairkan</div>
+          </div>
+          <div style="background:rgba(255,255,255,.2);height:28px;border-radius:99px"></div>
+          <div style="text-align:center;padding:0 4px;overflow:hidden">
+            <div style="font-size:13px;font-weight:800;color:white;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(deadlineLabel)}</div>
+            <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${deadlineSub ? deadlineSub.replace(/ \d{4}$/,'') : 'Deadline'}</div>
+          </div>
+        </div>
+      </div>`;
+
+    const filterHtml = `
+      <div class="card p-4">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="search-wrap">
+            <span class="search-ico">${I.search}</span>
+            <input class="search-inp" type="text" placeholder="Cari nama atau nomor HP..." value="${esc(S.search)}" oninput="S.search=this.value;renderNasabahList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          </div>
+          <div class="filter-row">
+            <select class="sel-inp" onchange="S.filterStatus=this.value;renderNasabahList()">
+              <option value="semua" ${S.filterStatus==='semua'?'selected':''}>Semua Status</option>
+              <option value="aktif" ${S.filterStatus==='aktif'?'selected':''}>Aktif</option>
+              <option value="non-aktif" ${S.filterStatus==='non-aktif'?'selected':''}>Non-Aktif</option>
+              <option value="cair" ${S.filterStatus==='cair'?'selected':''}>Sudah Cair</option>
+            </select>
+            <select class="sel-inp" onchange="S.sortBy=this.value;renderNasabahList()">
+              <option value="deadline" ${S.sortBy==='deadline'?'selected':''}>Deadline Terdekat</option>
+              <option value="nama" ${S.sortBy==='nama'?'selected':''}>Nama A-Z</option>
+              <option value="prog-desc" ${S.sortBy==='prog-desc'?'selected':''}>Progress Tertinggi</option>
+              <option value="prog-asc" ${S.sortBy==='prog-asc'?'selected':''}>Progress Terendah</option>
+            </select>
+          </div>
+        </div>
+      </div>`;
+
+    return `
+      ${navbar()}
+      <div class="p-4 space-y" style="padding-bottom:100px">
+        ${heroHtml}
+        ${filterHtml}
+        <div id="nasabah-list-section">
+          ${buildNasabahListSection()}
+        </div>
+      </div>
+      <button class="fab" onclick="go('form')">${I.plus}</button>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 7 — DETAIL PAGE
+  // ════════════════════════════════════════════════════════════
+  function buildDetail() {
+    const nasabah = db.getNasabah(S.nasabahId);
+    if (!nasabah) {
+      return pageHeader('Detail', `go('dashboard')`) + `<div class="p-4 empty">
+        <div class="empty-title">Nasabah tidak ditemukan</div>
+        <div class="empty-desc">Data mungkin sudah dihapus.</div>
+      </div>`;
+    }
+    const setoranList = db.getSetoranList(nasabah.id).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    const total = setoranList.reduce((a, s) => a + Number(s.nominal), 0);
+    const sisa = Math.max(0, Number(nasabah.target) - total);
+    const pct = nasabah.target > 0 ? Math.min(100, Math.round(total / nasabah.target * 100)) : 0;
+    const d = diffDays(nasabah.cairkan);
+    const lunas = sisa === 0;
+    const barColor = lunas ? 'var(--success)' : 'var(--primary)';
+    const pctColor = lunas ? 'var(--success)' : 'var(--primary)';
+
+    const heroSection = `
+      <div class="detail-hero">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="avatar av-lg" style="background:${getAvatarColor(nasabah.nama)};border:2px solid rgba(255,255,255,.2)">${getInitials(nasabah.nama)}</div>
+          <div>
+            <h1 style="font-size:22px;font-weight:800;color:white;margin-bottom:4px">${esc(nasabah.nama)}</h1>
+            <div class="info-row">${I.phone} ${esc(nasabah.hp)}</div>
+            ${nasabah.alamat ? `<div class="info-row">${I.mapPin} ${esc(nasabah.alamat)}</div>` : ''}
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-lbl">Status</div><div class="stat-val" style="text-transform:capitalize">${esc(nasabah.status)}</div></div>
+          <div class="stat-box"><div class="stat-lbl">Setoran</div><div class="stat-val">${setoranList.length}x</div></div>
+          <div class="stat-box"><div class="stat-lbl">Sisa Hari</div><div class="stat-val" style="color:${d<=7?'#fda4af':'#6ee7b7'}">${d<0?'Lewat':d}</div></div>
+        </div>
+      </div>`;
+
+    const progressCard = `
+      <div class="card p-5 mb-4">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <div class="text-2xs" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--text-muted);margin-bottom:3px">Terkumpul</div>
+            <div style="font-size:28px;font-weight:800">${formatRp(total)}</div>
+            <div class="text-sm text-muted mt-1">dari target <span class="font-bold" style="color:var(--text)">${formatRp(nasabah.target)}</span></div>
+          </div>
+          <div style="font-size:28px;font-weight:800;color:${pctColor}">${pct}%</div>
+        </div>
+        <div class="prog-big mb-3"><div class="prog-big-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <div class="flex justify-between text-xs items-center mb-5">
+          ${lunas
+            ? `<span class="font-bold flex items-center gap-2" style="color:var(--success);background:var(--success-light);padding:4px 10px;border-radius:8px">${I.shield} Target Tercapai</span>`
+            : `<span class="text-muted">Kurang <span class="font-bold text-danger">${formatRp(sisa)}</span></span>`}
+          <span class="flex items-center gap-1 text-muted">${I.calendar} ${formatDate(nasabah.cairkan)}</span>
+        </div>
+        <div class="flex gap-3" style="border-top:1px solid var(--border);padding-top:16px">
+          <button class="btn btn-outline flex-1" onclick="go('form',{id:'${nasabah.id}',isEdit:true})">${I.edit} Edit Profil</button>
+          <button class="btn btn-primary flex-1" ${nasabah.status==='cair'?'disabled':''} onclick="openPencairanModal()">
+            ${I.receipt} ${nasabah.status==='cair'?'Sudah Cair':'Cairkan'}
+          </button>
+        </div>
+      </div>`;
+
+    let setoranHtml = '';
+    if (setoranList.length === 0) {
+      setoranHtml = `<div class="card"><div class="empty">
+        <div style="font-size:40px;margin-bottom:12px">📋</div>
+        <div class="empty-title">Belum Ada Setoran</div>
+        <div class="empty-desc">Catat setoran pertama untuk mulai melacak progress tabungan.</div>
+        <div style="margin-top:16px"><button class="btn btn-primary" onclick="openSetoranModal()">${I.plus16} Catat Setoran</button></div>
+      </div></div>`;
+    } else {
+      const items = setoranList.map((s, idx) => {
+        const no = setoranList.length - idx;
+        return `
+          <div class="setoran-row" id="srow-${s.id}">
+            <div class="setoran-actions">
+              <button class="sa-btn sa-edit" onclick="closeSwiped();openSetoranModal('${s.id}')">${I.edit}<span>Edit</span></button>
+              <button class="sa-btn sa-del"  onclick="closeSwiped();confirmDeleteSetoran('${s.id}')">${I.trash}<span>Hapus</span></button>
+            </div>
+            <div class="setoran-item" data-id="${s.id}">
+              <div class="s-num">${no}</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-extrabold text-sm">${formatRp(s.nominal)}</span>
+                  <span class="badge ${s.metode==='tunai'?'b-tunai':'b-transfer'}">${s.metode}</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-muted">
+                  <span>${formatDate(s.tanggal)}</span>
+                  ${s.catatan ? `<span style="width:3px;height:3px;border-radius:50%;background:var(--border-strong);flex-shrink:0"></span><span class="truncate">${esc(s.catatan)}</span>` : ''}
+                </div>
+              </div>
+              ${s.metode==='transfer'&&s.foto
+                ? `<div class="foto-thumb" onclick="S.lightbox=encodeURIComponent(this.dataset.src);renderAll()" data-src="${esc(s.foto)}">
+                     <img src="${s.foto}" alt="Bukti">
+                   </div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+      setoranHtml = `<div class="setoran-list" id="setoran-list">${items}</div>`;
+    }
+
+    return `
+      ${pageHeader(nasabah.nama, `go('dashboard')`)}
+      ${heroSection}
+      <div class="detail-content">
+        ${progressCard}
+        <div class="flex justify-between items-center mb-3">
+          <span style="font-size:17px;font-weight:700">Riwayat Setoran</span>
+          <button class="btn btn-sm btn-outline" onclick="downloadEStatement('${nasabah.id}')">
+            ${I.fileText} E-Statement
+          </button>
+        </div>
+        ${setoranHtml}
+      </div>
+      <button class="fab" onclick="openSetoranModal()">${I.plus}</button>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 8 — NASABAH FORM
+  // ════════════════════════════════════════════════════════════
+  function buildForm() {
+    const nasabah = S.isEdit ? db.getNasabah(S.nasabahId) : null;
+    const v = nasabah || { nama:'', hp:'', alamat:'', target:'', cairkan:'', daftar:todayStr(), catatan:'', status:'aktif' };
+    const backFn = S.isEdit ? `go('detail',{id:'${S.nasabahId}'})` : `go('dashboard')`;
+
+    return `
+      ${pageHeader(S.isEdit ? 'Edit Nasabah' : 'Tambah Nasabah', backFn)}
+      <div class="p-4" style="padding-bottom:40px">
+        <div class="card p-5">
+          <form id="nasabah-form" onsubmit="submitNasabahForm(event)" novalidate>
+            <div class="form-group mb-4">
+              <label class="form-label">Nama Lengkap *</label>
+              <input class="form-ctrl" name="nama" type="text" placeholder="Contoh: Ahmad Fauzi" value="${esc(v.nama)}" required>
+              <span class="form-err" id="err-nama"></span>
+            </div>
+            <div class="form-grid2 mb-4">
+              <div class="form-group">
+                <label class="form-label">No. WhatsApp *</label>
+                <input class="form-ctrl" name="hp" type="tel" placeholder="0812..." value="${esc(v.hp)}" required>
+                <span class="form-err" id="err-hp"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tgl Daftar *</label>
+                <input class="form-ctrl" name="daftar" type="date" value="${esc(v.daftar)}" required>
+                <span class="form-err" id="err-daftar"></span>
+              </div>
+            </div>
+            <div class="form-grid2 mb-4">
+              <div class="form-group">
+                <label class="form-label">Target (Rp) *</label>
+                <input class="form-ctrl" name="target" type="text" inputmode="numeric" placeholder="1.500.000" value="${v.target ? Number(v.target).toLocaleString('id-ID') : ''}" oninput="onNominalInput(this)" style="font-weight:700;font-size:15px">
+                <span class="form-err" id="err-target"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tgl Cairkan *</label>
+                <input class="form-ctrl" name="cairkan" type="date" value="${esc(v.cairkan)}" required>
+                <span class="form-err" id="err-cairkan"></span>
+              </div>
+            </div>
+            <div class="form-group mb-5">
+              <label class="form-label">Alamat</label>
+              <textarea class="form-ctrl" name="alamat" placeholder="Alamat lengkap (opsional)...">${esc(v.alamat)}</textarea>
+            </div>
+            ${S.isEdit ? `
+            <div class="form-group mb-5">
+              <label class="form-label">Status</label>
+              <select class="form-ctrl" name="status">
+                <option value="aktif" ${v.status==='aktif'?'selected':''}>Aktif</option>
+                <option value="non-aktif" ${v.status==='non-aktif'?'selected':''}>Non-Aktif</option>
+                <option value="cair" ${v.status==='cair'?'selected':''}>Sudah Cair</option>
+              </select>
+            </div>` : ''}
+            <button type="submit" class="btn btn-primary btn-full btn-lg" id="form-submit-btn">Simpan Data</button>
+          </form>
+        </div>
+      </div>`;
+  }
+
+  function submitNasabahForm(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = {};
+    let valid = true;
+    const required = ['nama', 'hp', 'daftar', 'cairkan'];
+    required.forEach(field => {
+      const el = form.querySelector(`[name="${field}"]`);
+      const err = document.getElementById(`err-${field}`);
+      if (!el.value.trim()) {
+        err.textContent = 'Wajib diisi'; el.classList.add('invalid'); valid = false;
+      } else { err.textContent = ''; el.classList.remove('invalid'); }
+      data[field] = el.value.trim();
+    });
+    const targetEl = form.querySelector('[name="target"]');
+    const errTarget = document.getElementById('err-target');
+    const targetVal = getNominalValue(targetEl);
+    if (!targetVal || targetVal < 1) {
+      errTarget.textContent = 'Target harus lebih dari 0'; targetEl.classList.add('invalid'); valid = false;
+    } else { errTarget.textContent = ''; targetEl.classList.remove('invalid'); }
+    data.target = targetVal;
+    data.alamat = (form.querySelector('[name="alamat"]') || {}).value || '';
+    data.catatan = (form.querySelector('[name="catatan"]') || {}).value || '';
+    const statusEl = form.querySelector('[name="status"]');
+    data.status = statusEl ? statusEl.value : 'aktif';
+    if (!valid) return;
+    document.getElementById('form-submit-btn').disabled = true;
+    document.getElementById('form-submit-btn').textContent = 'Menyimpan...';
+    if (S.isEdit && S.nasabahId) {
+      db.updateNasabah(S.nasabahId, data);
+      showToast('Data nasabah diperbarui!');
+      go('detail', { id: S.nasabahId });
+    } else {
+      const res = db.createNasabah(data);
+      showToast('Nasabah berhasil ditambahkan!');
+      go('detail', { id: res.id });
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 9 — PENCAIRAN PAGE
+  // ════════════════════════════════════════════════════════════
+  function buildPencairan() {
+    const pencairanList = db.getPencairanList();
+    const nasabahList = db.getNasabahList();
+    const records = [...pencairanList]
+      .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
+      .map(p => ({ ...p, nasabah: nasabahList.find(n => n.id === p.nasabah_id) }));
+    const totalCair = records.reduce((a, r) => a + Number(r.nominal), 0);
+
+    let body = '';
+    if (records.length === 0) {
+      body = `<div class="empty">
+        <div style="color:var(--text-subtle);margin-bottom:12px">${I.trendDown}</div>
+        <div class="empty-title">Belum Ada Pencairan</div>
+        <div class="empty-desc">Rekap pencairan akan muncul di sini setelah dana nasabah dicairkan.</div>
+      </div>`;
+    } else {
+      body = `
+        <div class="pencairan-hero">
+          <div class="flex items-center gap-3 mb-3">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:white">${I.history}</div>
+            <span style="font-weight:700;color:rgba(255,255,255,.9)">Rekap Pencairan</span>
+          </div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.7)">Total Dicairkan</div>
+          <div style="font-size:28px;font-weight:800;color:white">${formatRp(totalCair)}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:2px">${records.length} transaksi pencairan</div>
+        </div>
+        <div class="space-y-3">
+          ${records.map(r => `
+            <div class="pencairan-item" onclick="${r.nasabah ? `go('detail',{id:'${r.nasabah_id}'})` : ''}">
+              <div class="p-ico">${I.trendDown}</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start gap-2">
+                  <div>
+                    <div class="font-bold text-sm truncate">${esc(r.nasabah ? r.nasabah.nama : 'Nasabah Dihapus')}</div>
+                    <div class="text-xs text-muted" style="margin-top:2px">${formatDate(r.tanggal)}</div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="font-extrabold text-success">${formatRp(r.nominal)}</div>
+                    <span class="badge b-cairlist" style="margin-top:3px">Cair</span>
+                  </div>
+                </div>
+                ${r.keterangan ? `<div class="text-xs text-muted truncate" style="background:var(--bg-muted);border-radius:8px;padding:5px 10px;margin-top:8px">${esc(r.keterangan)}</div>` : ''}
+              </div>
+              ${r.nasabah ? `<span style="color:var(--text-subtle)">${I.chevR}</span>` : ''}
+            </div>`).join('')}
+        </div>`;
+    }
+
+    return `
+      ${pageHeader('Rekap Pencairan', `go('dashboard')`)}
+      <div class="p-4 space-y" style="padding-bottom:40px">${body}</div>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 10 — SETTINGS
+  // ════════════════════════════════════════════════════════════
+  function buildSettings() {
+    const s = db.getSetting();
+    return `
+      ${pageHeader('Pengaturan', `go('dashboard')`)}
+      <div class="p-4 space-y" style="padding-bottom:40px">
+        <div class="settings-section">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="s-ico">${I.building}</div>
+            <div>
+              <div class="font-bold">Info Lembaga</div>
+              <div class="text-xs text-muted">Muncul di surat PDF pencairan</div>
+            </div>
+          </div>
+          <form id="settings-form" onsubmit="submitSettings(event)" novalidate>
+            <div class="form-group mb-4">
+              <label class="form-label">Nama Lembaga</label>
+              <input class="form-ctrl" name="lembaga" placeholder="Koperasi Simpan Pinjam..." value="${esc(s.lembaga||'')}">
+            </div>
+            <div class="form-grid2 mb-4">
+              <div class="form-group">
+                <label class="form-label">Nama Pengelola</label>
+                <input class="form-ctrl" name="pengelola" placeholder="Bapak/Ibu..." value="${esc(s.pengelola||'')}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Jabatan</label>
+                <input class="form-ctrl" name="jabatan" placeholder="Ketua, Bendahara..." value="${esc(s.jabatan||'')}">
+              </div>
+            </div>
+            <div class="form-grid2 mb-4">
+              <div class="form-group">
+                <label class="form-label">Kontak / Alamat</label>
+                <input class="form-ctrl" name="kontak" placeholder="Jl. Merdeka No.1..." value="${esc(s.kontak||'')}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kota (untuk surat)</label>
+                <input class="form-ctrl" name="kota" placeholder="Jakarta" value="${esc(s.kota||'')}">
+              </div>
+            </div>
+            <div class="form-group mb-5">
+              <label class="form-label">Tanda Tangan Digital</label>
+              ${s.ttd ? `
+                <div style="position:relative;display:inline-block">
+                  <img src="${s.ttd}" style="height:80px;border-radius:10px;border:1px solid var(--border);padding:6px;object-fit:contain;background:white;max-width:160px">
+                  <button type="button" onclick="removeTtd()" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:white;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
+                </div>
+              ` : `
+                <div class="upload-area" style="height:80px;width:150px" onclick="document.getElementById('ttd-input').click()">
+                  ${I.imgPlus}
+                  <span style="font-size:12px;font-weight:500">Upload TTD</span>
+                </div>
+              `}
+              <input type="file" id="ttd-input" accept="image/*" style="display:none" onchange="handleTtdUpload(event)">
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Simpan Pengaturan</button>
+          </form>
+        </div>
+        <div class="settings-section">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="s-ico" style="background:var(--orange-light);color:var(--warning)">${I.fileText}</div>
+            <div>
+              <div class="font-bold">Test Generate PDF</div>
+              <div class="text-xs text-muted">Uji PDF dari data dummy eksternal tanpa mengubah data asli</div>
+            </div>
+          </div>
+          <div style="background:var(--bg-muted);border-radius:12px;padding:12px;font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
+            Paste JSON data dummy atau upload file <code style="background:var(--border);padding:1px 5px;border-radius:4px;font-size:11px">.json</code> untuk menguji hasil generate PDF e-statement maupun surat pencairan, tanpa menyentuh data sesungguhnya.
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <button class="btn btn-outline btn-sm flex-1" onclick="loadDummyTemplate('estatement')">${I.fileText} Contoh E-Statement</button>
+              <button class="btn btn-outline btn-sm flex-1" onclick="loadDummyTemplate('pencairan')">${I.receipt} Contoh Pencairan</button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline btn-sm flex-1" onclick="document.getElementById('dummy-json-file').click()">${I.upload} Upload JSON</button>
+              <input type="file" id="dummy-json-file" accept=".json" style="display:none" onchange="loadDummyFromFile(event)">
+              <button class="btn btn-ghost btn-sm" onclick="clearDummyJson()" title="Bersihkan">${I.x}</button>
+            </div>
+          </div>
+          <textarea id="dummy-json-input" class="form-ctrl" style="min-height:120px;font-family:monospace;font-size:12px;resize:vertical" placeholder='{"nasabah":{...},"setoran":[...]}'></textarea>
+          <span class="form-err" id="err-dummy-json" style="margin-top:4px"></span>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-primary flex-1" onclick="testPdfDummy('estatement')">${I.fileText} E-Statement PDF</button>
+            <button class="btn btn-primary flex-1" style="background:linear-gradient(135deg,#059669,#10b981)" onclick="testPdfDummy('pencairan')">${I.receipt} Pencairan PDF</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="font-bold mb-2">Backup & Restore</div>
+          <div class="text-sm text-muted mb-4">Data tersimpan di perangkat ini. Buat backup rutin agar data aman.</div>
+          <div class="flex gap-3">
+            <button class="btn btn-outline flex-1" onclick="exportBackup()">${I.download} Export</button>
+            <button class="btn btn-outline flex-1" onclick="document.getElementById('import-input').click()">${I.upload} Import</button>
+          </div>
+          <input type="file" id="import-input" accept=".json" style="display:none" onchange="importBackup(event)">
+        </div>
+        <div class="settings-danger">
+          <div class="font-bold text-danger mb-2">Zona Berbahaya</div>
+          <div class="text-sm text-muted mb-4">Tindakan ini tidak bisa dibatalkan. Pastikan sudah membuat backup terlebih dahulu.</div>
+          <button class="btn btn-danger" onclick="confirmResetData()">${I.trash} Hapus Semua Data</button>
+        </div>
+      </div>`;
+  }
+
+  function submitSettings(e) {
+    e.preventDefault();
+    const form = e.target;
+    const s = db.getSetting();
+    db.saveSetting({
+      lembaga: form.querySelector('[name="lembaga"]').value,
+      pengelola: form.querySelector('[name="pengelola"]').value,
+      jabatan: form.querySelector('[name="jabatan"]').value,
+      kontak: form.querySelector('[name="kontak"]').value,
+      kota: form.querySelector('[name="kota"]').value,
+      ttd: s.ttd,
+    });
+    showToast('Pengaturan disimpan!');
+  }
+
+  function handleTtdUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const s = db.getSetting();
+      db.saveSetting({ ...s, ttd: ev.target.result });
+      renderAll(); showToast('Tanda tangan diupload!');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
+  function removeTtd() {
+    const s = db.getSetting();
+    db.saveSetting({ ...s, ttd: undefined });
+    renderAll();
+  }
+
+  function exportBackup() {
+    const data = db.exportData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `kumpulyuk-backup-${todayStr()}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('Backup berhasil diunduh!');
+  }
+
+  function importBackup(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        db.importData(JSON.parse(ev.target.result));
+        renderAll(); showToast('Data berhasil dipulihkan!');
+      } catch { showToast('Gagal membaca file backup', 'error'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function confirmResetData() {
+    setState({ confirm: {
+      title: 'Hapus Semua Data?',
+      desc: 'Semua nasabah, setoran, dan pencairan akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+      onConfirm() { db.resetData(); renderAll(); showToast('Semua data dihapus', 'error'); },
+    }});
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 11 — MODALS
+  // ════════════════════════════════════════════════════════════
+  function buildModals() {
+    let html = '';
+    if (S.drawer)        html += buildDrawer();
+    if (S.confirm)       html += buildConfirmModal();
+    if (S.setoranModal)  html += buildSetoranModal();
+    if (S.pencairanModal) html += buildPencairanModal();
+    if (S.lightbox)      html += buildLightbox();
+    return html;
+  }
+
+  // ── Drawer ──────────────────────────────────────────────────
+  function buildDrawer() {
+    const links = [
+      { icon: I.home, label: 'Dashboard', page: 'dashboard' },
+      { icon: I.history, label: 'Rekap Pencairan', page: 'pencairan' },
+      { icon: I.settings, label: 'Pengaturan', page: 'settings' },
+    ];
+    return `
+      <div class="drawer-ov" onclick="setState({drawer:false})"></div>
+      <div class="drawer">
+        ${links.map(l => `<button class="drawer-item ${S.page===l.page?'active':''}" onclick="S.drawer=false;go('${l.page}')">${l.icon} ${l.label}</button>`).join('')}
+      </div>`;
+  }
+
+  // ── Confirm ──────────────────────────────────────────────────
+  function buildConfirmModal() {
+    const c = S.confirm;
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this)setState({confirm:null})">
+        <div class="modal confirm-wrap">
+          <div class="confirm-ico">${I.alert}</div>
+          <div class="confirm-title">${esc(c.title)}</div>
+          <div class="confirm-desc">${esc(c.desc)}${c.name?`<br><br><span class="confirm-name">"${esc(c.name)}"</span>`:''}</div>
+          <div class="confirm-btns">
+            <button class="btn btn-outline flex-1" onclick="setState({confirm:null})">Batal</button>
+            <button class="btn btn-danger flex-1" onclick="doConfirm()">Hapus</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function doConfirm() {
+    const fn = S.confirm && S.confirm.onConfirm;
+    setState({ confirm: null });
+    if (fn) fn();
+  }
+
+  // ── Setoran modal ────────────────────────────────────────────
+  function openSetoranModal(editId) {
+    if (editId) {
+      const s = db.getSetoranList(S.nasabahId).find(x => x.id === editId);
+      _draft = s ? { nominal: s.nominal, metode: s.metode, tanggal: s.tanggal, catatan: s.catatan || '', foto: s.foto || null } : null;
+    } else {
+      _draft = { nominal: '', metode: 'tunai', tanggal: todayStr(), catatan: '', foto: null };
+    }
+    setState({ setoranModal: true, setoranEditId: editId || null });
+  }
+
+  function closeSetoranModal() {
+    _draft = null;
+    setState({ setoranModal: false, setoranEditId: null });
+  }
+
+  function saveDraftFromForm() {
+    if (!_draft) return;
+    const nomEl = document.getElementById('s-nominal');
+    const tanEl = document.getElementById('s-tanggal');
+    const catEl = document.getElementById('s-catatan');
+    if (nomEl) _draft.nominal = getNominalValue(nomEl);
+    if (tanEl) _draft.tanggal = tanEl.value;
+    if (catEl) _draft.catatan = catEl.value;
+  }
+
+  function buildSetoranModal() {
+    const d = _draft || { nominal: '', metode: 'tunai', tanggal: todayStr(), catatan: '', foto: null };
+    const isEdit = !!S.setoranEditId;
+    const nominalDisplay = d.nominal ? Number(d.nominal).toLocaleString('id-ID') : '';
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this)closeSetoranModal()">
+        <div class="modal">
+          <div class="modal-hdr">
+            <span class="modal-title">${isEdit ? 'Edit Setoran' : 'Catat Setoran'}</span>
+            <button class="icon-btn" onclick="closeSetoranModal()">${I.x}</button>
+          </div>
+          <form id="setoran-form" onsubmit="submitSetoranForm(event)" novalidate>
+            <div class="modal-body">
+              <div class="form-group mb-4">
+                <label class="form-label">Nominal (Rp) *</label>
+                <input class="form-ctrl" id="s-nominal" type="text" inputmode="numeric" placeholder="Contoh: 100.000" value="${esc(nominalDisplay)}" oninput="onNominalInput(this)" style="font-weight:700;font-size:17px">
+                <span class="form-err" id="err-s-nominal"></span>
+              </div>
+              <div class="form-grid2 mb-4">
+                <div class="form-group">
+                  <label class="form-label">Metode *</label>
+                  <select class="form-ctrl" id="s-metode" onchange="saveDraftFromForm();if(_draft){_draft.metode=this.value;updateFotoSection(this.value);}">
+                    <option value="tunai" ${d.metode==='tunai'?'selected':''}>Tunai</option>
+                    <option value="transfer" ${d.metode==='transfer'?'selected':''}>Transfer Bank</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tanggal *</label>
+                  <input class="form-ctrl" id="s-tanggal" type="date" value="${esc(d.tanggal)}">
+                  <span class="form-err" id="err-s-tanggal"></span>
+                </div>
+              </div>
+              <div class="form-group mb-4">
+                <label class="form-label">Catatan</label>
+                <input class="form-ctrl" id="s-catatan" type="text" placeholder="Opsional..." value="${esc(d.catatan)}">
+              </div>
+              <div id="foto-section">
+              ${d.metode === 'transfer' ? `
+              <div class="form-group mb-4">
+                <label class="form-label">Bukti Transfer</label>
+                ${d.foto ? `
+                  <div style="position:relative">
+                    <img src="${d.foto}" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer" onclick="S.lightbox=encodeURIComponent(_draft.foto);renderAll()">
+                    <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
+                      <button type="button" onclick="S.lightbox=encodeURIComponent(_draft.foto);renderAll()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text)">${I.zoomIn}</button>
+                      <button type="button" onclick="if(_draft)_draft.foto=null;renderAll()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--danger)">${I.x}</button>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="upload-area" style="height:96px" onclick="document.getElementById('foto-input').click()">
+                    ${I.imgPlus}
+                    <span style="font-size:14px;font-weight:500">Upload Bukti Transfer</span>
+                    <span style="font-size:11px;opacity:.7">JPG, PNG — maks. 5MB</span>
+                  </div>
+                `}
+                <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoUpload(event)">
+              </div>` : ''}
+              </div>
+            </div>
+            <div style="padding:0 20px 20px;display:flex;gap:10px">
+              <button type="button" class="btn btn-outline flex-1" onclick="closeSetoranModal()">Batal</button>
+              <button type="submit" class="btn btn-primary flex-1">Simpan</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+  }
+
+  function updateFotoSection(metode) {
+    const el = document.getElementById('foto-section');
+    if (!el) return;
+    if (metode !== 'transfer') {
+      el.innerHTML = '';
+      return;
+    }
+    const d = _draft || {};
+    el.innerHTML = `
+      <div class="form-group mb-4">
+        <label class="form-label">Bukti Transfer</label>
+        ${d.foto ? `
+          <div style="position:relative">
+            <img src="${d.foto}" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer" onclick="S.lightbox=encodeURIComponent(_draft.foto);renderAll()">
+            <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
+              <button type="button" onclick="S.lightbox=encodeURIComponent(_draft.foto);renderAll()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text)">${I.zoomIn}</button>
+              <button type="button" onclick="if(_draft)_draft.foto=null;updateFotoSection('transfer')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--danger)">${I.x}</button>
+            </div>
+          </div>
+        ` : `
+          <div class="upload-area" style="height:96px" onclick="document.getElementById('foto-input').click()">
+            ${I.imgPlus}
+            <span style="font-size:14px;font-weight:500">Upload Bukti Transfer</span>
+            <span style="font-size:11px;opacity:.7">JPG, PNG — maks. 5MB</span>
+          </div>
+        `}
+        <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoUpload(event)">
+      </div>`;
+  }
+
+  function handleFotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 1200;
+        let { width: w, height: h } = img;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        if (_draft) _draft.foto = canvas.toDataURL('image/jpeg', 0.75);
+        updateFotoSection('transfer');
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
+  function submitSetoranForm(e) {
+    e.preventDefault();
+    let valid = true;
+    const nomEl = document.getElementById('s-nominal');
+    const tanEl = document.getElementById('s-tanggal');
+    const errNom = document.getElementById('err-s-nominal');
+    const errTan = document.getElementById('err-s-tanggal');
+    const nomVal = getNominalValue(nomEl);
+    if (!nomVal || nomVal < 1000) {
+      errNom.textContent = 'Nominal minimal Rp 1.000'; nomEl.classList.add('invalid'); valid = false;
+    } else { errNom.textContent = ''; nomEl.classList.remove('invalid'); }
+    if (!tanEl.value) {
+      errTan.textContent = 'Tanggal wajib diisi'; tanEl.classList.add('invalid'); valid = false;
+    } else { errTan.textContent = ''; tanEl.classList.remove('invalid'); }
+    if (!valid) return;
+    const metode = document.getElementById('s-metode').value;
+    const payload = {
+      nominal: nomVal,
+      metode,
+      tanggal: tanEl.value,
+      catatan: document.getElementById('s-catatan').value || '',
+      foto: metode === 'transfer' ? (_draft && _draft.foto) : undefined,
+    };
+    if (S.setoranEditId) {
+      db.updateSetoran(S.setoranEditId, payload);
+      showToast('Setoran diperbarui!');
+    } else {
+      db.createSetoran({ ...payload, nasabah_id: S.nasabahId });
+      showToast('Setoran berhasil dicatat!');
+    }
+    closeSetoranModal();
+  }
+
+  // ── Pencairan modal ──────────────────────────────────────────
+  function checkPencairanNominal(total) {
+    const warn = document.getElementById('p-nominal-warn');
+    const el = document.getElementById('p-nominal');
+    if (!warn || !el) return;
+    warn.style.display = getNominalValue(el) !== total ? 'block' : 'none';
+  }
+
+  function onPencairanMetodeChange() {
+    const metode = document.getElementById('p-metode').value;
+    const transferFields = document.getElementById('p-transfer-fields');
+    const catatanEl = document.getElementById('p-catatan');
+    if (metode === 'tunai') {
+      transferFields.style.display = 'none';
+      if (!catatanEl.dataset.edited) catatanEl.value = 'Telah diserahkan kepada yang bersangkutan';
+    } else {
+      transferFields.style.display = 'block';
+      updatePencairanCatatan();
+    }
+  }
+
+  function updatePencairanCatatan() {
+    const catatanEl = document.getElementById('p-catatan');
+    if (catatanEl.dataset.edited) return;
+    const metode = document.getElementById('p-metode').value;
+    const bank = document.getElementById('p-bank') ? document.getElementById('p-bank').value : '';
+    const norek = document.getElementById('p-norek') ? document.getElementById('p-norek').value.trim() : '';
+    const namapemilik = document.getElementById('p-namapemilik') ? document.getElementById('p-namapemilik').value.trim() : '';
+    if (metode === 'tunai') {
+      catatanEl.value = 'Telah diserahkan kepada yang bersangkutan';
+    } else {
+      let ket = 'Dana telah ditransfer';
+      if (bank) ket += ' via ' + bank;
+      if (norek) ket += ' ke rekening ' + norek;
+      if (namapemilik) ket += ' atas nama ' + namapemilik + ', sesuai permintaan nasabah yang bersangkutan';
+      else ket += ' atas nama nasabah yang bersangkutan';
+      ket += '.';
+      catatanEl.value = ket;
+    }
+  }
+
+  function buildKeteranganPencairan() {
+    const metode = document.getElementById('p-metode') ? document.getElementById('p-metode').value : 'tunai';
+    const bank = document.getElementById('p-bank') ? document.getElementById('p-bank').value : '';
+    const norek = (document.getElementById('p-norek') ? document.getElementById('p-norek').value.trim() : '');
+    if (metode === 'tunai') return 'Tunai';
+    let k = 'Transfer Bank';
+    if (bank && bank !== 'Lainnya') k += ' ' + bank;
+    if (norek) k += ' - ' + norek;
+    return k;
+  }
+
+  function openPencairanModal() { setState({ pencairanModal: true }); }
+
+  function buildPencairanModal() {
+    const nasabah = db.getNasabah(S.nasabahId);
+    const setoranList = db.getSetoranList(S.nasabahId);
+    const total = setoranList.reduce((a, s) => a + Number(s.nominal), 0);
+    const sisa = Math.max(0, Number(nasabah.target) - total);
+    const banks = ['BCA','Mandiri','BNI','BRI','BSI','BTN','CIMB Niaga','Danamon','Permata','Lainnya'];
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this)setState({pencairanModal:false})">
+        <div class="modal">
+          <div class="modal-hdr">
+            <span class="modal-title">Pencairan Dana</span>
+            <button class="icon-btn" onclick="setState({pencairanModal:false})">${I.x}</button>
+          </div>
+          <form id="pencairan-form" onsubmit="submitPencairan(event)" novalidate>
+            <div class="modal-body">
+              <div style="background:var(--bg-muted);border-radius:14px;padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div>
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.06em">Terkumpul</div>
+                  <div style="font-size:22px;font-weight:800;color:var(--primary)">${formatRp(total)}</div>
+                </div>
+                <div class="text-right">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.06em">Sisa</div>
+                  <div style="font-size:16px;font-weight:700;color:${sisa>0?'var(--danger)':'var(--success)'}">${formatRp(sisa)}</div>
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label class="form-label">Nominal Dicairkan (Rp) *</label>
+                <input class="form-ctrl" id="p-nominal" type="text" inputmode="numeric" value="${Number(total).toLocaleString('id-ID')}" oninput="onNominalInput(this);checkPencairanNominal(${total})" style="font-weight:700;font-size:17px">
+                <span class="form-err" id="err-p-nominal"></span>
+              </div>
+              <div id="p-nominal-warn" style="display:none;background:var(--orange-light);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--warning);margin-bottom:4px">
+                Nominal berbeda dari total setoran (${formatRp(total)}). Pastikan sudah benar.
+              </div>
+              <div class="form-group mb-4" style="margin-top:12px">
+                <label class="form-label">Tanggal Cairkan *</label>
+                <input class="form-ctrl" id="p-tanggal" type="date" value="${todayStr()}">
+                <span class="form-err" id="err-p-tanggal"></span>
+              </div>
+              <div class="form-group mb-3">
+                <label class="form-label">Metode Pencairan *</label>
+                <select class="form-ctrl" id="p-metode" onchange="onPencairanMetodeChange()">
+                  <option value="tunai">Tunai</option>
+                  <option value="transfer">Transfer Bank</option>
+                </select>
+              </div>
+              <div id="p-transfer-fields" style="display:none;background:var(--bg-muted);border-radius:14px;padding:14px;margin-bottom:12px">
+                <div class="form-group mb-3">
+                  <label class="form-label">Nama Bank</label>
+                  <select class="form-ctrl" id="p-bank" onchange="updatePencairanCatatan()">
+                    <option value="">-- Pilih Bank --</option>
+                    ${banks.map(b => `<option value="${b}">${b}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label class="form-label">No. Rekening <span style="font-weight:400;text-transform:none;font-size:10px">(opsional)</span></label>
+                  <input class="form-ctrl" id="p-norek" type="text" inputmode="numeric" placeholder="Contoh: 1234567890" oninput="updatePencairanCatatan()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nama Pemilik Rekening <span style="font-weight:400;text-transform:none;font-size:10px">(opsional — kosongkan jika atas nama nasabah sendiri)</span></label>
+                  <input class="form-ctrl" id="p-namapemilik" type="text" placeholder="Contoh: Budi Santoso" oninput="updatePencairanCatatan()">
+                </div>
+              </div>
+              <div class="form-group mb-4">
+                <label class="form-label">Catatan Tambahan</label>
+                <input class="form-ctrl" id="p-catatan" type="text"
+                  value="Telah diserahkan kepada yang bersangkutan"
+                  oninput="this.dataset.edited='1'">
+              </div>
+              <div style="background:var(--primary-light);border-radius:12px;padding:12px;font-size:13px;color:var(--primary)">
+                Setelah dikonfirmasi, status nasabah akan berubah menjadi <strong>Cair</strong> dan dokumen PDF akan otomatis digenerate.
+              </div>
+            </div>
+            <div style="padding:0 20px 20px;display:flex;gap:10px">
+              <button type="button" class="btn btn-outline flex-1" onclick="setState({pencairanModal:false})">Batal</button>
+              <button type="submit" class="btn btn-primary flex-1">Konfirmasi & PDF</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+  }
+
+  function submitPencairan(e) {
+    e.preventDefault();
+    let valid = true;
+    const nomEl = document.getElementById('p-nominal');
+    const tanEl = document.getElementById('p-tanggal');
+    const errNom = document.getElementById('err-p-nominal');
+    const errTan = document.getElementById('err-p-tanggal');
+    const nomVal = getNominalValue(nomEl);
+    if (!nomVal || nomVal < 1) { errNom.textContent = 'Wajib diisi'; nomEl.classList.add('invalid'); valid = false; }
+    else { errNom.textContent = ''; nomEl.classList.remove('invalid'); }
+    if (!tanEl.value.trim()) { errTan.textContent = 'Wajib diisi'; tanEl.classList.add('invalid'); valid = false; }
+    else { errTan.textContent = ''; tanEl.classList.remove('invalid'); }
+    if (!valid) return;
+    const nasabah = db.getNasabah(S.nasabahId);
+    const setoranList = db.getSetoranList(S.nasabahId);
+    const keterangan = buildKeteranganPencairan();
+    const catatan = document.getElementById('p-catatan').value || '';
+    db.createPencairan({
+      nasabah_id: S.nasabahId,
+      nominal: nomVal,
+      tanggal: tanEl.value,
+      keterangan,
+      catatan,
+    });
+    setState({ pencairanModal: false });
+    showToast('Pencairan berhasil dicatat!');
+    try { generatePDF(nasabah, setoranList, db.getSetting(), keterangan, catatan); }
+    catch (err) { showToast('PDF gagal: ' + err.message, 'error'); }
+  }
+
+  // ── Lightbox ─────────────────────────────────────────────────
+  function buildLightbox() {
+    const src = decodeURIComponent(S.lightbox);
+    return `
+      <div class="modal-overlay" onclick="setState({lightbox:null})" style="align-items:center;padding:16px">
+        <div style="width:100%;max-width:600px">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+            <button onclick="setState({lightbox:null})" style="background:rgba(255,255,255,.9);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f172a">${I.x}</button>
+          </div>
+          <img src="${src}" style="width:100%;border-radius:16px;max-height:76vh;object-fit:contain">
+        </div>
+      </div>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 12 — DELETE CONFIRMATIONS
+  // ════════════════════════════════════════════════════════════
+  function confirmDeleteNasabah(id, name) {
+    setState({ confirm: {
+      title: 'Hapus Nasabah?',
+      desc: 'Data nasabah dan semua riwayat setorannya akan dihapus permanen.',
+      name,
+      onConfirm() {
+        db.deleteNasabah(id);
+        if (S.page === 'detail') go('dashboard');
+        else renderAll();
+        showToast('Nasabah dihapus', 'error');
+      },
+    }});
+  }
+
+  function confirmDeleteSetoran(id) {
+    const s = db.getSetoranList(S.nasabahId).find(x => x.id === id);
+    const detail = s ? `${formatRp(s.nominal)} · ${formatDate(s.tanggal)}` : '';
+    setState({ confirm: {
+      title: 'Hapus Setoran?',
+      desc: 'Data setoran ini akan dihapus permanen.',
+      name: detail,
+      onConfirm() { db.deleteSetoran(id); renderAll(); showToast('Setoran dihapus', 'error'); },
+    }});
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 13 — DROPDOWN
+  // ════════════════════════════════════════════════════════════
+  function toggleDropdown(id) {
+    S.dropdownId = S.dropdownId === id ? null : id;
+    renderAll();
+  }
+  function closeDropdown() { S.dropdownId = null; }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', e => {
+    if (S.dropdownId && !e.target.closest('.dropdown')) {
+      S.dropdownId = null; renderAll();
+    }
+  });
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 14 — THEME
+  // ════════════════════════════════════════════════════════════
+  function toggleTheme() {
+    S.theme = S.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', S.theme);
+    localStorage.setItem(PFX + 'ui_theme', S.theme);
+    renderAll();
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 15 — SWIPE TO GO BACK
+  // ════════════════════════════════════════════════════════════
+  let _touchStartX = 0;
+  document.addEventListener('touchstart', e => { _touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!['detail','form','pencairan','settings'].includes(S.page)) return;
+    const dx = e.changedTouches[0].clientX - _touchStartX;
+    if (dx > 80 && _touchStartX < 40) {
+      if (S.page === 'detail') go('dashboard');
+      else if (S.page === 'form') { if (S.isEdit) go('detail', { id: S.nasabahId }); else go('dashboard'); }
+      else go('dashboard');
+    }
+  }, { passive: true });
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 16 — PDF GENERATION
+  // ════════════════════════════════════════════════════════════
+  function generatePDF(nasabah, setoranList, setting, keterangan, catatan) {
+    const { jsPDF } = window.jspdf;
+    const setorans = [...setoranList].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+    const total = setorans.reduce((a, s) => a + Number(s.nominal), 0);
+    const sisa = Math.max(0, Number(nasabah.target) - total);
+    const lunas = sisa === 0;
+    const now = new Date();
+    const tglCetak = formatDate(now.toISOString().slice(0, 10));
+    const tglPertama = setorans.length ? formatDate(setorans[0].tanggal) : '-';
+    const tglTerakhir = setorans.length ? formatDate(setorans[setorans.length - 1].tanggal) : '-';
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const PW = 210, L = 14, R = 14, CW = PW - L - R, PH = 297, T = 14;
+    let y = T;
+    const noSurat = 'SE' + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '/' + now.getFullYear() + '/' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+
+    const f = (style, size) => { doc.setFont('helvetica', style || 'normal'); doc.setFontSize(size || 9.5); };
+    const col = (r, g, b) => doc.setTextColor(r, g, b);
+    const reset = () => col(17, 17, 17);
+    const gray = () => col(100, 100, 100);
+    const wrap = (txt, w, sz) => { doc.setFontSize(sz || 9.5); return doc.splitTextToSize(String(txt || ''), w); };
+
+    const needPage = (need) => {
+      if (y + (need || 20) > PH - 16) { doc.addPage(); y = T; drawKop(false); }
+    };
+
+    function drawKop(full) {
+      f('bold', 13);
+      doc.text((setting.lembaga || 'Kumpul.Yuk').toUpperCase(), PW / 2, y, { align: 'center' }); y += 5.5;
+      if (setting.kontak) { f('normal', 8); gray(); doc.text(setting.kontak, PW / 2, y, { align: 'center' }); reset(); y += 4; }
+      doc.setLineWidth(0.8); doc.setDrawColor(17, 17, 17);
+      doc.line(L, y, PW - R, y); doc.setLineWidth(0.2); doc.line(L, y + 1.4, PW - R, y + 1.4);
+      doc.setDrawColor(0); y += 6;
+      if (full) {
+        f('bold', 12); doc.text('SURAT KETERANGAN PENCAIRAN TABUNGAN', PW / 2, y, { align: 'center' }); y += 5;
+        f('normal', 8.5); gray(); doc.text('No: ' + noSurat, PW / 2, y, { align: 'center' }); reset(); y += 7;
+      } else {
+        f('italic', 8); gray(); doc.text('(lanjutan) ' + noSurat + ' - ' + nasabah.nama, L, y); reset(); y += 5;
+      }
+    }
+
+    drawKop(true);
+
+    // Kalimat intro — paragraf plain, lalu baris ringkas bold sebagai penekanan
+    const lembagaNama = (setting.lembaga || 'Kumpul.Yuk').toUpperCase();
+    const introText = lunas
+      ? 'Yang bertanda tangan di bawah ini, pengelola tabungan ' + lembagaNama + ', menerangkan bahwa nasabah berikut telah menyelesaikan program tabungan. Seluruh target tabungan telah terpenuhi dan dana dinyatakan lunas. Dana telah dicairkan sesuai kesepakatan.'
+      : 'Yang bertanda tangan di bawah ini, pengelola tabungan ' + lembagaNama + ', menerangkan bahwa nasabah berikut melakukan pencairan dana tabungan. Dana tersebut telah diserahkan kepada nasabah yang bersangkutan.';
+    f('normal', 9.5);
+    const pmLines = wrap(introText, CW);
+    doc.text(pmLines, L, y, { lineHeightFactor: 1.55 }); y += pmLines.length * 5.5 + 3;
+
+    // Baris penekanan bold — ringkas, tanpa box/banner
+    f('bold', 9.5);
+    if (lunas) col(5, 150, 105); else col(14, 116, 144);
+    const emphLine = lunas
+      ? 'Jumlah Lunas: ' + formatRp(total) + ' dari target ' + formatRp(nasabah.target)
+      : 'Jumlah Dicairkan: ' + formatRp(total) + ' dari target ' + formatRp(nasabah.target) + '  |  Kekurangan: ' + formatRp(sisa);
+    doc.text(emphLine, L, y); reset(); y += 7;
+
+    needPage(50);
+    f('bold', 10); doc.text('Identitas Nasabah', L, y); y += 4;
+    const idRows = [
+      ['Nama Lengkap', nasabah.nama],
+      ['No. HP', nasabah.hp],
+      ...(nasabah.alamat ? [['Alamat', nasabah.alamat]] : []),
+      ['Periode Menabung', tglPertama + ' - ' + tglTerakhir],
+      ['Tanggal Cairkan', formatDate(nasabah.cairkan)],
+    ];
+    const RH = 6.5, labelW = 52, idH = idRows.length * RH + 4;
+    doc.setFillColor(250, 250, 252); doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.3);
+    doc.rect(L, y, CW, idH, 'FD'); doc.setDrawColor(0);
+    idRows.forEach((row, i) => {
+      const ry = y + 5 + i * RH;
+      if (i > 0) { doc.setLineWidth(0.1); doc.setDrawColor(226, 232, 240); doc.line(L, ry - 2, L + CW, ry - 2); doc.setDrawColor(0); }
+      f('normal', 9); gray(); doc.text(row[0], L + 3, ry); reset(); f('bold', 9.5);
+      doc.text(wrap(String(row[1]), CW - labelW - 4)[0], L + labelW, ry);
+    });
+    y += idH + 6;
+
+    needPage(22);
+    f('bold', 10); doc.text('Rincian Setoran', L, y); y += 4;
+    const cw = [10, 38, 46, 28, 60];
+    const heads = ['No', 'Tanggal', 'Nominal', 'Metode', 'Catatan'];
+    const aligns = ['center', 'left', 'right', 'center', 'left'];
+    const THH = 9, TRH = 8, PAD = 3.5;
+
+    function drawTblHead() {
+      doc.setFillColor(14, 116, 144); doc.rect(L, y, CW, THH, 'F');
+      let cx = L;
+      heads.forEach((h, i) => {
+        f('bold', 8.5); col(255, 255, 255);
+        const tx = aligns[i] === 'right' ? cx + cw[i] - PAD : aligns[i] === 'center' ? cx + cw[i] / 2 : cx + PAD;
+        doc.text(h, tx, y + THH / 2 + 1.5, { align: aligns[i] });
+        if (i < heads.length - 1) { doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.2); doc.line(cx + cw[i], y + 1.5, cx + cw[i], y + THH - 1.5); }
+        cx += cw[i];
+      });
+      reset(); doc.setDrawColor(0); y += THH;
+    }
+    drawTblHead();
+
+    let prevPage = doc.internal.getCurrentPageInfo().pageNumber;
+    setorans.forEach((s, i) => {
+      const yBefore = y;
+      needPage(TRH + 3);
+      // Jika needPage menambah halaman baru, gambar ulang header tabel
+      const curPage = doc.internal.getCurrentPageInfo().pageNumber;
+      if (curPage !== prevPage) { drawTblHead(); prevPage = curPage; }
+      if (i % 2 === 0) { doc.setFillColor(245, 250, 252); doc.rect(L, y, CW, TRH, 'F'); }
+      doc.setDrawColor(214, 226, 230); doc.setLineWidth(0.15); doc.line(L, y + TRH, L + CW, y + TRH);
+      let cx2 = L;
+      for (let j = 0; j < cw.length - 1; j++) { cx2 += cw[j]; doc.setDrawColor(214, 226, 230); doc.setLineWidth(0.1); doc.line(cx2, y, cx2, y + TRH); }
+      doc.setDrawColor(0);
+      const cells = [String(i + 1), formatDate(s.tanggal), formatRp(s.nominal), s.metode.charAt(0).toUpperCase() + s.metode.slice(1), s.catatan || '-'];
+      let cx = L;
+      cells.forEach((v, j) => {
+        f(j === 2 ? 'bold' : 'normal', j === 2 ? 9 : 8.5);
+        if (j === 2) col(14, 116, 144); else reset();
+        const tx = aligns[j] === 'right' ? cx + cw[j] - PAD : aligns[j] === 'center' ? cx + cw[j] / 2 : cx + PAD;
+        doc.text(wrap(v, cw[j] - PAD * 2, j === 2 ? 9 : 8.5)[0], tx, y + TRH / 2 + 1.5, { align: aligns[j] });
+        cx += cw[j];
+      });
+      reset(); y += TRH;
+    });
+
+    // Total row
+    needPage(TRH + 3);
+    doc.setFillColor(14, 116, 144); doc.rect(L, y, CW, TRH, 'F');
+    f('bold', 9); col(255, 255, 255);
+    doc.text('Total (' + setorans.length + ' setoran)', L + PAD, y + TRH / 2 + 1.5);
+    doc.text(formatRp(total), L + cw[0] + cw[1] + cw[2] - PAD, y + TRH / 2 + 1.5, { align: 'right' });
+    reset(); y += TRH + 6;
+
+    // Summary box
+    needPage(36);
+    const sumRows = [
+      { lbl: 'Target Tabungan', val: formatRp(nasabah.target), bold: false },
+      { lbl: 'Total Setoran (' + setorans.length + 'x)', val: formatRp(total), bold: false },
+      ...(!lunas ? [{ lbl: 'Kekurangan', val: formatRp(sisa), bold: true, red: true }] : []),
+      { lbl: 'Dibayarkan via', val: keterangan || '-', bold: true, divider: true },
+    ];
+    const SRH = 6.5, boxH = sumRows.length * SRH + 10;
+    doc.setFillColor(250, 250, 252); doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.3);
+    doc.rect(L, y, CW, boxH, 'FD'); doc.setDrawColor(0);
+    let sy = y + 6;
+    sumRows.forEach(item => {
+      if (item.divider) { doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.2); doc.line(L + 4, sy - 2.5, L + CW - 4, sy - 2.5); doc.setDrawColor(0); }
+      f('normal', 9); gray(); doc.text(item.lbl, L + 4, sy); reset();
+      f(item.bold ? 'bold' : 'normal', 9.5);
+      if (item.red) col(220, 38, 38);
+      doc.text(wrap(String(item.val), CW / 2)[0], L + CW - 4, sy, { align: 'right' });
+      reset(); sy += SRH;
+    });
+    y += boxH + 6;
+
+    // Catatan tambahan (jika ada)
+    if (catatan && catatan.trim()) {
+      needPage(16);
+      f('normal', 9);
+      gray(); doc.text('Catatan:', L, y); reset();
+      f('italic', 9);
+      const catLines = wrap(catatan.trim(), CW - 20, 9);
+      doc.text(catLines, L + 20, y, { lineHeightFactor: 1.5 });
+      reset(); y += catLines.length * 5 + 5;
+    }
+
+    // Closing paragraph
+    needPage(18); f('normal', 9.5);
+    const ptLines = wrap('Demikian surat keterangan ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.', CW);
+    doc.text(ptLines, L, y, { lineHeightFactor: 1.55 }); y += ptLines.length * 5.5 + 5;
+    doc.text((setting.kota ? setting.kota + ', ' : '') + tglCetak, L + CW, y, { align: 'right' }); y += 16;
+
+    // Signatures
+    needPage(36);
+    const c1 = L + CW * 0.22, c2 = L + CW * 0.78, TW = 44;
+    f('normal', 9.5);
+    doc.text('Nasabah,', c1, y, { align: 'center' });
+    doc.text('Pengelola,', c2, y, { align: 'center' });
+    y += 4;
+    const signY = y;
+    if (setting.ttd) {
+      const iW = 38, iH = 20, iX = c2 - iW / 2;
+      try { doc.addImage(setting.ttd, 'JPEG', iX, signY, iW, iH, '', 'FAST'); } catch (_) {}
+      const lineY = signY + iH - 6;
+      doc.setLineWidth(0.4);
+      doc.line(c1 - TW / 2, signY + 16, c1 + TW / 2, signY + 16);
+      doc.line(c2 - TW / 2, lineY, c2 + TW / 2, lineY);
+      y = lineY + 5;
+    } else {
+      y = signY + 16; doc.setLineWidth(0.4);
+      doc.line(c1 - TW / 2, y, c1 + TW / 2, y); doc.line(c2 - TW / 2, y, c2 + TW / 2, y); y += 5;
+    }
+    f('bold', 9.5); doc.text(nasabah.nama, c1, y, { align: 'center' }); doc.text(setting.pengelola || 'Pengelola', c2, y, { align: 'center' }); y += 4.5;
+    f('normal', 8.5); gray(); doc.text('Nasabah', c1, y, { align: 'center' }); doc.text(setting.jabatan || 'Pengelola', c2, y, { align: 'center' }); reset();
+
+    // Footer on all pages
+    const TP = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= TP; p++) {
+      doc.setPage(p); f('normal', 7.5);
+      doc.setDrawColor(14, 116, 144); doc.setLineWidth(0.4); doc.line(L, PH - 12, PW - R, PH - 12); doc.setDrawColor(0);
+      gray();
+      doc.text(setting.lembaga || 'Kumpul.Yuk', L, PH - 8);
+      doc.text('Hal. ' + p + ' / ' + TP, PW / 2, PH - 8, { align: 'center' });
+      doc.text('Dicetak: ' + tglCetak, PW - R, PH - 8, { align: 'right' });
+      reset();
+    }
+
+    const fname = 'Surat-Pencairan-' + nasabah.nama.replace(/\s+/g, '-') + '-' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + '.pdf';
+    doc.save(fname);
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 16b — E-STATEMENT PDF
+  // ════════════════════════════════════════════════════════════
+  function downloadEStatement(nasabahId) {
+    const { jsPDF } = window.jspdf;
+    const nasabah = db.getNasabah(nasabahId);
+    if (!nasabah) return;
+    const setting = db.getSetting();
+    const setorans = db.getSetoranList(nasabahId).sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+    const total = setorans.reduce((a, s) => a + Number(s.nominal), 0);
+    const sisa = Math.max(0, Number(nasabah.target) - total);
+    const lunas = sisa === 0;
+    const now = new Date();
+    const tglCetak = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const tglPertama = setorans.length ? formatDate(setorans[0].tanggal) : '-';
+    const tglTerakhir = setorans.length ? formatDate(setorans[setorans.length - 1].tanggal) : '-';
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const PW = 210, PH = 297, L = 18, R = 18, T = 16;
+    const CW = PW - L - R;
+    let y = T;
+
+    const f = (style, sz) => { doc.setFont('helvetica', style); if (sz) doc.setFontSize(sz); };
+    const gray = () => doc.setTextColor(100, 116, 139);
+    const reset = () => { doc.setTextColor(0); doc.setFont('helvetica', 'normal'); };
+    const col = (r, g, b) => doc.setTextColor(r, g, b);
+    const wrap = (txt, w, sz) => { doc.setFontSize(sz || 9.5); return doc.splitTextToSize(String(txt || ''), w); };
+    const needPage = (need) => {
+      if (y + (need || 20) > PH - 16) { doc.addPage(); y = T; drawKop(false); }
+    };
+
+    function drawKop(full) {
+      f('bold', 13);
+      doc.text((setting.lembaga || 'Kumpul.Yuk').toUpperCase(), PW / 2, y, { align: 'center' }); y += 5.5;
+      if (setting.kontak) { f('normal', 8); gray(); doc.text(setting.kontak, PW / 2, y, { align: 'center' }); reset(); y += 4; }
+      doc.setLineWidth(0.8); doc.setDrawColor(17, 17, 17);
+      doc.line(L, y, PW - R, y); doc.setLineWidth(0.2); doc.line(L, y + 1.4, PW - R, y + 1.4);
+      doc.setDrawColor(0); y += 6;
+      if (full) {
+        f('bold', 12); doc.text('E-STATEMENT TABUNGAN', PW / 2, y, { align: 'center' }); y += 5;
+        f('normal', 8.5); gray(); doc.text('Dicetak: ' + tglCetak, PW / 2, y, { align: 'center' }); reset(); y += 8;
+      } else {
+        f('italic', 8); gray(); doc.text('(lanjutan) ' + nasabah.nama, L, y); reset(); y += 5;
+      }
+    }
+
+    drawKop(true);
+
+    // ── Identitas nasabah ──
+    f('bold', 10); doc.text('Identitas Nasabah', L, y); y += 4;
+    const idRows = [
+      ['Nama Lengkap', nasabah.nama],
+      ['No. HP', nasabah.hp],
+      ...(nasabah.alamat ? [['Alamat', nasabah.alamat]] : []),
+      ['Status', nasabah.status.charAt(0).toUpperCase() + nasabah.status.slice(1)],
+      ['Tanggal Cairkan', formatDate(nasabah.cairkan)],
+    ];
+    const RH = 6.5, labelW = 52, idH = idRows.length * RH + 4;
+    doc.setFillColor(250, 250, 252); doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.3);
+    doc.rect(L, y, CW, idH, 'FD'); doc.setDrawColor(0);
+    idRows.forEach((row, i) => {
+      const ry = y + 5 + i * RH;
+      if (i > 0) { doc.setLineWidth(0.1); doc.setDrawColor(226, 232, 240); doc.line(L, ry - 2, L + CW, ry - 2); doc.setDrawColor(0); }
+      f('normal', 9); gray(); doc.text(row[0], L + 3, ry); reset(); f('bold', 9.5);
+      doc.text(wrap(String(row[1]), CW - labelW - 4)[0], L + labelW, ry);
+    });
+    y += idH + 6;
+
+    // ── Ringkasan ──
+    needPage(38);
+    f('bold', 10); doc.text('Ringkasan Tabungan', L, y); y += 4;
+    const pct = nasabah.target > 0 ? Math.min(100, Math.round(total / nasabah.target * 100)) : 0;
+    const sumRows = [
+      { lbl: 'Target Tabungan', val: formatRp(nasabah.target) },
+      { lbl: 'Total Setoran (' + setorans.length + 'x)', val: formatRp(total), highlight: true },
+      { lbl: lunas ? 'Kelebihan' : 'Kekurangan', val: formatRp(sisa), red: !lunas, green: lunas },
+      { lbl: 'Periode', val: tglPertama + (setorans.length > 1 ? ' - ' + tglTerakhir : '') },
+    ];
+    const SRH = 7;
+    const progRowH = 13;
+    const boxH = sumRows.length * SRH + 8 + progRowH;
+    doc.setFillColor(250, 250, 252); doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.3);
+    doc.rect(L, y, CW, boxH, 'FD'); doc.setDrawColor(0);
+    let sy = y + 6;
+    sumRows.forEach(item => {
+      f('normal', 9); gray(); doc.text(item.lbl, L + 4, sy); reset();
+      f(item.highlight ? 'bold' : 'normal', item.highlight ? 10 : 9.5);
+      if (item.red) col(220, 38, 38);
+      else if (item.green) col(5, 150, 105);
+      else if (item.highlight) col(14, 116, 144);
+      doc.text(String(item.val), L + CW - 4, sy, { align: 'right' });
+      reset(); sy += SRH;
+    });
+    // Garis pemisah sebelum baris progres
+    doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.3);
+    doc.line(L, sy - 1, L + CW, sy - 1); doc.setDrawColor(0);
+    // Baris progres — label kiri, persen kanan, bar di tengah
+    const prY = sy + 4;
+    f('normal', 8); gray(); doc.text('Progres Tabungan', L + 4, prY); reset();
+    f('bold', 9);
+    if (lunas) col(5, 150, 105); else col(14, 116, 144);
+    doc.text(pct + '%', L + CW - 4, prY, { align: 'right' });
+    reset();
+    const barX = L + 4, barW = CW - 8, barH = 3, barY = prY + 2.5;
+    doc.setFillColor(226, 232, 240); doc.rect(barX, barY, barW, barH, 'F');
+    if (lunas) doc.setFillColor(5, 150, 105); else doc.setFillColor(14, 116, 144);
+    doc.rect(barX, barY, barW * pct / 100, barH, 'F');
+    y += boxH + 6;
+
+    // ── Tabel setoran ──
+    needPage(24);
+    f('bold', 10); doc.text('Riwayat Setoran', L, y); y += 4;
+
+    if (setorans.length === 0) {
+      f('italic', 9); gray(); doc.text('Belum ada setoran tercatat.', L + 4, y + 6); reset(); y += 14;
+    } else {
+      const cw = [10, 38, 46, 28, 60];
+      const heads = ['No', 'Tanggal', 'Nominal', 'Metode', 'Catatan'];
+      const aligns = ['center', 'left', 'right', 'center', 'left'];
+      const THH = 9, TRH = 8, PAD = 3.5;
+
+      function drawHead() {
+        doc.setFillColor(14, 116, 144); doc.rect(L, y, CW, THH, 'F');
+        let cx = L;
+        heads.forEach((h, i) => {
+          f('bold', 8.5); col(255, 255, 255);
+          const tx = aligns[i] === 'right' ? cx + cw[i] - PAD : aligns[i] === 'center' ? cx + cw[i] / 2 : cx + PAD;
+          doc.text(h, tx, y + THH / 2 + 1.5, { align: aligns[i] });
+          if (i < heads.length - 1) { doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(cx + cw[i], y + 1.5, cx + cw[i], y + THH - 1.5); }
+          cx += cw[i];
+        });
+        reset(); doc.setDrawColor(0); y += THH;
+      }
+      drawHead();
+
+      let prevPageEs = doc.internal.getCurrentPageInfo().pageNumber;
+      setorans.forEach((s, i) => {
+        needPage(TRH + 3);
+        const curPageEs = doc.internal.getCurrentPageInfo().pageNumber;
+        if (curPageEs !== prevPageEs) { drawHead(); prevPageEs = curPageEs; }
+        if (i % 2 === 0) { doc.setFillColor(245, 250, 252); doc.rect(L, y, CW, TRH, 'F'); }
+        doc.setDrawColor(214, 226, 230); doc.setLineWidth(0.15); doc.line(L, y + TRH, L + CW, y + TRH);
+        let cx2 = L;
+        for (let j = 0; j < cw.length - 1; j++) { cx2 += cw[j]; doc.setLineWidth(0.1); doc.line(cx2, y, cx2, y + TRH); }
+        doc.setDrawColor(0);
+        const cells = [String(i+1), formatDate(s.tanggal), formatRp(s.nominal), s.metode.charAt(0).toUpperCase()+s.metode.slice(1), s.catatan||'-'];
+        let cx = L;
+        cells.forEach((v, j) => {
+          f(j===2?'bold':'normal', j===2?9:8.5);
+          if (j===2) col(14,116,144); else reset();
+          const tx = aligns[j]==='right' ? cx+cw[j]-PAD : aligns[j]==='center' ? cx+cw[j]/2 : cx+PAD;
+          doc.text(wrap(v, cw[j]-PAD*2, j===2?9:8.5)[0], tx, y+TRH/2+1.5, { align: aligns[j] });
+          cx += cw[j];
+        });
+        reset(); y += TRH;
+      });
+
+      // Total row
+      needPage(TRH + 3);
+      doc.setFillColor(14,116,144); doc.rect(L, y, CW, TRH, 'F');
+      f('bold', 9); col(255,255,255);
+      doc.text('Total (' + setorans.length + ' setoran)', L + PAD, y + TRH/2 + 1.5);
+      doc.text(formatRp(total), L + cw[0]+cw[1]+cw[2]-PAD, y + TRH/2 + 1.5, { align: 'right' });
+      reset(); y += TRH + 8;
+    }
+
+    // ── Catatan penutup ──
+    needPage(14);
+    f('italic', 8.5); gray();
+    doc.text('Dokumen ini digenerate secara otomatis oleh sistem ' + (setting.lembaga || 'Kumpul.Yuk') + ' pada ' + tglCetak + '.', L, y, { maxWidth: CW });
+    reset();
+
+    // ── Footer semua halaman ──
+    const TP = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= TP; p++) {
+      doc.setPage(p); f('normal', 7.5);
+      doc.setDrawColor(14,116,144); doc.setLineWidth(0.4); doc.line(L, PH-12, PW-R, PH-12); doc.setDrawColor(0);
+      gray();
+      doc.text(setting.lembaga || 'Kumpul.Yuk', L, PH-8);
+      doc.text('Hal. ' + p + ' / ' + TP, PW/2, PH-8, { align: 'center' });
+      doc.text('Dicetak: ' + tglCetak, PW-R, PH-8, { align: 'right' });
+      reset();
+    }
+
+    const fname = 'E-Statement-' + nasabah.nama.replace(/\s+/g, '-') + '-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '.pdf';
+    doc.save(fname);
+    showToast('E-Statement berhasil diunduh!');
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 16c — TEST PDF WITH DUMMY DATA
+  // ════════════════════════════════════════════════════════════
+
+  const DUMMY_TEMPLATES = {
+    estatement: {
+      nasabah: {
+        id: 'dummy-001',
+        nama: 'Dummy Nasabah Contoh',
+        hp: '081200001111',
+        alamat: 'Jl. Contoh Dummy No.99, Kota Uji Coba',
+        target: 2000000,
+        cairkan: '2026-12-31',
+        daftar: '2026-01-01',
+        catatan: 'Data dummy untuk testing PDF',
+        status: 'aktif',
+      },
+      setoran: [
+        { id: 'd-s1', nasabah_id: 'dummy-001', nominal: 400000, metode: 'tunai',    tanggal: '2026-01-10', catatan: 'Setoran pertama', created_at: new Date().toISOString() },
+        { id: 'd-s2', nasabah_id: 'dummy-001', nominal: 350000, metode: 'transfer', tanggal: '2026-02-08', catatan: 'via BCA', created_at: new Date().toISOString() },
+        { id: 'd-s3', nasabah_id: 'dummy-001', nominal: 300000, metode: 'tunai',    tanggal: '2026-03-05', catatan: '', created_at: new Date().toISOString() },
+        { id: 'd-s4', nasabah_id: 'dummy-001', nominal: 450000, metode: 'transfer', tanggal: '2026-04-12', catatan: 'via Mandiri', created_at: new Date().toISOString() },
+        { id: 'd-s5', nasabah_id: 'dummy-001', nominal: 500000, metode: 'tunai',    tanggal: '2026-05-03', catatan: 'Setoran pelunasan', created_at: new Date().toISOString() },
+      ],
+    },
+    pencairan: {
+      nasabah: {
+        id: 'dummy-002',
+        nama: 'Dummy Pencairan Contoh',
+        hp: '082200002222',
+        alamat: 'Jl. Test PDF No.7, Kota Dummy',
+        target: 1500000,
+        cairkan: '2026-06-30',
+        daftar: '2026-01-05',
+        catatan: 'Lunas sebelum jatuh tempo',
+        status: 'cair',
+      },
+      setoran: [
+        { id: 'd-p1', nasabah_id: 'dummy-002', nominal: 500000, metode: 'tunai',    tanggal: '2026-01-20', catatan: '', created_at: new Date().toISOString() },
+        { id: 'd-p2', nasabah_id: 'dummy-002', nominal: 500000, metode: 'transfer', tanggal: '2026-03-15', catatan: 'via BRI', created_at: new Date().toISOString() },
+        { id: 'd-p3', nasabah_id: 'dummy-002', nominal: 500000, metode: 'tunai',    tanggal: '2026-05-10', catatan: 'Pelunasan', created_at: new Date().toISOString() },
+      ],
+      pencairan: {
+        keterangan: 'Transfer BCA',
+        tanggal: '2026-06-01',
+        catatan: 'Dicairkan lebih awal',
+        nominal: 1500000,
+      },
+    },
+  };
+
+  function loadDummyTemplate(type) {
+    const el = document.getElementById('dummy-json-input');
+    if (!el) return;
+    el.value = JSON.stringify(DUMMY_TEMPLATES[type], null, 2);
+    document.getElementById('err-dummy-json').textContent = '';
+    showToast('Template ' + (type === 'estatement' ? 'E-Statement' : 'Pencairan') + ' dimuat!');
+  }
+
+  function loadDummyFromFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const el = document.getElementById('dummy-json-input');
+      if (el) {
+        el.value = ev.target.result;
+        document.getElementById('err-dummy-json').textContent = '';
+        showToast('File JSON berhasil dimuat!');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function clearDummyJson() {
+    const el = document.getElementById('dummy-json-input');
+    if (el) { el.value = ''; }
+    document.getElementById('err-dummy-json').textContent = '';
+  }
+
+  function parseDummyJson() {
+    const el = document.getElementById('dummy-json-input');
+    const errEl = document.getElementById('err-dummy-json');
+    if (!el || !el.value.trim()) {
+      if (errEl) errEl.textContent = 'JSON kosong. Paste data dummy atau gunakan tombol "Contoh" di atas.';
+      return null;
+    }
+    try {
+      const data = JSON.parse(el.value);
+      if (!data.nasabah || typeof data.nasabah !== 'object') throw new Error('Field "nasabah" tidak ditemukan atau bukan object.');
+      if (!Array.isArray(data.setoran)) throw new Error('Field "setoran" harus berupa array.');
+      const required = ['nama', 'hp', 'target', 'cairkan'];
+      required.forEach(f => {
+        if (!data.nasabah[f]) throw new Error(`Field nasabah."${f}" wajib diisi.`);
+      });
+      if (errEl) errEl.textContent = '';
+      return data;
+    } catch (err) {
+      if (errEl) errEl.textContent = '⚠ ' + err.message;
+      return null;
+    }
+  }
+
+  function testPdfDummy(type) {
+    const data = parseDummyJson();
+    if (!data) return;
+    const setting = db.getSetting();
+    const nasabah = { id: data.nasabah.id || 'dummy-test', ...data.nasabah };
+    const setoranList = (data.setoran || []).map((s, i) => ({
+      id: s.id || ('d-' + i),
+      nasabah_id: nasabah.id,
+      nominal: Number(s.nominal) || 0,
+      metode: s.metode || 'tunai',
+      tanggal: s.tanggal || new Date().toISOString().slice(0, 10),
+      catatan: s.catatan || '',
+      created_at: s.created_at || new Date().toISOString(),
+    }));
+
+    try {
+      if (type === 'estatement') {
+        // Temporarily inject dummy into db-like structure for downloadEStatement
+        // Since downloadEStatement calls db directly, we patch then restore
+        const origGetNasabah = db.getNasabah.bind(db);
+        const origGetSetoranList = db.getSetoranList.bind(db);
+        db.getNasabah = (id) => id === nasabah.id ? nasabah : origGetNasabah(id);
+        db.getSetoranList = (nid) => nid === nasabah.id ? setoranList : origGetSetoranList(nid);
+        try {
+          downloadEStatement(nasabah.id);
+        } finally {
+          db.getNasabah = origGetNasabah;
+          db.getSetoranList = origGetSetoranList;
+        }
+        showToast('E-Statement PDF dummy berhasil di-generate!');
+      } else {
+        // pencairan
+        const p = data.pencairan || {};
+        const keterangan = p.keterangan || 'Transfer (Dummy)';
+        generatePDF(nasabah, setoranList, setting, keterangan);
+        showToast('Surat Pencairan PDF dummy berhasil di-generate!');
+      }
+    } catch (err) {
+      showToast('PDF gagal: ' + err.message, 'error');
+      console.error(err);
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 17 — INIT
+  // ════════════════════════════════════════════════════════════
+  db.seedIfNeeded();
+  document.documentElement.setAttribute('data-theme', S.theme);
+
+  // History API — back gesture / hardware back button
+  // Wrapped in try-catch: tidak tersedia di srcdoc iframe (preview Claude)
+  try {
+    history.replaceState({ page: 'dashboard', params: {} }, '', '#dashboard');
+    window.addEventListener('popstate', (e) => {
+      if (e.state) {
+        if (S.setoranModal || S.pencairanModal || S.confirm || S.drawer || S.lightbox) {
+          S.setoranModal = false; S.pencairanModal = false;
+          S.confirm = null; S.drawer = false; S.lightbox = null;
+          renderAll();
+          try { history.pushState({ page: S.page, params: { id: S.nasabahId } }, '', location.hash); } catch(_) {}
+        } else {
+          go(e.state.page || 'dashboard', e.state.params || {}, true);
+        }
+      } else {
+        go('dashboard', {}, true);
+      }
+    });
+  } catch(_) { /* berjalan di iframe/srcdoc, History API dinonaktifkan */ }
+
+  renderAll();
+  </script>
+</body>
+</html>
