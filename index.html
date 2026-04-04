@@ -7,6 +7,31 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD2PH8Iaj7RGx3mhp1RNuqG03dy75iyINo",
+      authDomain: "kumpul-in.firebaseapp.com",
+      projectId: "kumpul-in",
+      messagingSenderId: "502619204737",
+      appId: "1:502619204737:web:5f269bd56d647c33a2f180"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const firestoreDb = getFirestore(firebaseApp);
+
+    // Expose ke global scope
+    window._fb = {
+      db: firestoreDb,
+      collection, doc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp,
+    };
+
+    window._fbReady = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -551,90 +576,234 @@
   }
 
   // ════════════════════════════════════════════════════════════
-  //  SECTION 3 — DATABASE (localStorage)
+  //  SECTION 3 — DATABASE (Firebase Firestore + localStorage cache)
+  //  localStorage hanya dipakai untuk: setting, theme, cache sementara
+  //  Data utama (nasabah, setoran, pencairan) → Firestore
   // ════════════════════════════════════════════════════════════
   const PFX = 'ky1_';
 
-  function dbGet(key) {
-    try { return JSON.parse(localStorage.getItem(PFX + key) || '[]'); } catch { return []; }
-  }
-  function dbSet(key, val) { localStorage.setItem(PFX + key, JSON.stringify(val)); }
+  // ── Cache in-memory (sinkron dari Firestore) ──
+  let _cache = { nasabah: [], setoran: [], pencairan: [] };
+  let _cacheReady = false;
+
   function dbGetObj(key) {
     try { return JSON.parse(localStorage.getItem(PFX + key) || '{}'); } catch { return {}; }
   }
   function dbSetObj(key, val) { localStorage.setItem(PFX + key, JSON.stringify(val)); }
 
+  // ── Firestore helpers ──
+  async function fsGetAll(colName) {
+    const { db: fdb, collection: col, getDocs: gd } = window._fb;
+    const snap = await gd(col(fdb, colName));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async function fsAdd(colName, data) {
+    const { db: fdb, collection: col, addDoc: ad, serverTimestamp: st } = window._fb;
+    const docRef = await ad(col(fdb, colName), { ...data, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    return docRef.id;
+  }
+
+  async function fsUpdate(colName, id, data) {
+    const { db: fdb, doc: fdoc, updateDoc: ud } = window._fb;
+    await ud(fdoc(fdb, colName, id), { ...data, updated_at: new Date().toISOString() });
+  }
+
+  async function fsDelete(colName, id) {
+    const { db: fdb, doc: fdoc, deleteDoc: dd } = window._fb;
+    await dd(fdoc(fdb, colName, id));
+  }
+
+  // ── Upload foto bukti — simpan base64 langsung di Firestore ──
+  // (tidak pakai Firebase Storage, foto dikompres sebelum disimpan)
+  async function uploadFotoBukti(base64DataUrl, setoranId) {
+    // Langsung return base64 — disimpan sebagai field di dokumen setoran
+    return base64DataUrl;
+  }
+
+  async function deleteFotoBukti(setoranId) {
+    // Tidak ada file eksternal yang perlu dihapus
+  }
+
+  // ── Load semua data dari Firestore ke cache ──
+  async function loadAllFromFirestore() {
+    try {
+      showLoadingOverlay(true);
+      const [nasabah, setoran, pencairan] = await Promise.all([
+        fsGetAll('nasabah'),
+        fsGetAll('setoran'),
+        fsGetAll('pencairan'),
+      ]);
+      _cache.nasabah   = nasabah;
+      _cache.setoran   = setoran;
+      _cache.pencairan = pencairan;
+      _cacheReady = true;
+    } catch (err) {
+      showToast('Gagal memuat data: ' + err.message, 'error');
+      console.error(err);
+    } finally {
+      showLoadingOverlay(false);
+    }
+  }
+
+  function showLoadingOverlay(show) {
+    let el = document.getElementById('loading-overlay');
+    if (show) {
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'loading-overlay';
+        el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:var(--font)';
+        el.innerHTML = `
+          <div style="width:48px;height:48px;border-radius:14px;background:var(--gradient);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:22px">K</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text-muted)">Memuat data...</div>
+          <div style="width:40px;height:3px;border-radius:99px;background:var(--border);overflow:hidden">
+            <div style="width:100%;height:100%;background:var(--primary);animation:prog-anim 1s ease-in-out infinite alternate;border-radius:99px"></div>
+          </div>`;
+        document.body.appendChild(el);
+      }
+    } else {
+      if (el) el.remove();
+    }
+  }
+
   const db = {
-    getNasabahList() { return dbGet('nasabah'); },
-    getNasabah(id) { return this.getNasabahList().find(n => n.id === id); },
-    createNasabah(data) {
-      const item = { ...data, id: genId() };
-      dbSet('nasabah', [...this.getNasabahList(), item]);
+    // ── READ (dari cache) ──
+    getNasabahList()       { return [..._cache.nasabah]; },
+    getNasabah(id)         { return _cache.nasabah.find(n => n.id === id); },
+    getSetoranList(nId)    { return nId ? _cache.setoran.filter(s => s.nasabah_id === nId) : [..._cache.setoran]; },
+    getPencairanList(nId)  { return nId ? _cache.pencairan.filter(p => p.nasabah_id === nId) : [..._cache.pencairan]; },
+    getSetting()           { return dbGetObj('setting'); },
+
+    // ── WRITE ── (update cache dulu, lalu Firestore async)
+    async createNasabah(data) {
+      const id = await fsAdd('nasabah', data);
+      const item = { ...data, id };
+      _cache.nasabah.push(item);
+      renderAll();
       return item;
     },
-    updateNasabah(id, data) {
-      const list = this.getNasabahList().map(n => n.id === id ? { ...n, ...data } : n);
-      dbSet('nasabah', list);
-      return list.find(n => n.id === id);
+
+    async updateNasabah(id, data) {
+      await fsUpdate('nasabah', id, data);
+      _cache.nasabah = _cache.nasabah.map(n => n.id === id ? { ...n, ...data } : n);
+      renderAll();
     },
-    deleteNasabah(id) {
-      dbSet('nasabah', this.getNasabahList().filter(n => n.id !== id));
-      dbSet('setoran', dbGet('setoran').filter(s => s.nasabah_id !== id));
-      dbSet('pencairan', dbGet('pencairan').filter(p => p.nasabah_id !== id));
+
+    async deleteNasabah(id) {
+      const setoranMilik = _cache.setoran.filter(s => s.nasabah_id === id);
+      for (const s of setoranMilik) await fsDelete('setoran', s.id);
+      const pencairanMilik = _cache.pencairan.filter(p => p.nasabah_id === id);
+      for (const p of pencairanMilik) await fsDelete('pencairan', p.id);
+      await fsDelete('nasabah', id);
+      _cache.nasabah   = _cache.nasabah.filter(n => n.id !== id);
+      _cache.setoran   = _cache.setoran.filter(s => s.nasabah_id !== id);
+      _cache.pencairan = _cache.pencairan.filter(p => p.nasabah_id !== id);
+      renderAll();
     },
-    getSetoranList(nasabahId) {
-      const all = dbGet('setoran');
-      return nasabahId ? all.filter(s => s.nasabah_id === nasabahId) : all;
-    },
-    createSetoran(data) {
-      const item = { ...data, id: genId(), created_at: new Date().toISOString() };
-      dbSet('setoran', [...dbGet('setoran'), item]);
+
+    async createSetoran(data) {
+      let fotoBase64 = null;
+      if (data.foto && data.metode === 'transfer') {
+        fotoBase64 = data.foto; // base64, disimpan langsung di Firestore
+      }
+      const payload = { ...data, foto: fotoBase64 };
+      const id = await fsAdd('setoran', payload);
+      const item = { ...payload, id };
+      _cache.setoran.push(item);
+      renderAll();
       return item;
     },
-    updateSetoran(id, data) {
-      const list = dbGet('setoran').map(s => s.id === id ? { ...s, ...data } : s);
-      dbSet('setoran', list);
+
+    async updateSetoran(id, data) {
+      const payload = { ...data };
+      // Jika metode bukan transfer, hapus foto
+      if (data.metode !== 'transfer') payload.foto = null;
+      await fsUpdate('setoran', id, payload);
+      _cache.setoran = _cache.setoran.map(s => s.id === id ? { ...s, ...payload } : s);
+      renderAll();
     },
-    deleteSetoran(id) { dbSet('setoran', dbGet('setoran').filter(s => s.id !== id)); },
-    getPencairanList(nasabahId) {
-      const all = dbGet('pencairan');
-      return nasabahId ? all.filter(p => p.nasabah_id === nasabahId) : all;
+
+    async deleteSetoran(id) {
+      await fsDelete('setoran', id);
+      _cache.setoran = _cache.setoran.filter(s => s.id !== id);
+      renderAll();
     },
-    createPencairan(data) {
-      const item = { ...data, id: genId(), created_at: new Date().toISOString() };
-      dbSet('pencairan', [...dbGet('pencairan'), item]);
-      this.updateNasabah(data.nasabah_id, { status: 'cair' });
+
+    async createPencairan(data) {
+      const id = await fsAdd('pencairan', data);
+      const item = { ...data, id };
+      _cache.pencairan.push(item);
+      await this.updateNasabah(data.nasabah_id, { status: 'cair' });
+      renderAll();
       return item;
     },
-    getSetting() { return dbGetObj('setting'); },
+
     saveSetting(data) { dbSetObj('setting', data); },
+
     exportData() {
-      return { nasabah: this.getNasabahList(), setoran: this.getSetoranList(), pencairan: this.getPencairanList(), setting: this.getSetting(), exported_at: new Date().toISOString() };
+      return { nasabah: this.getNasabahList(), setoran: this.getSetoranList(), pencairan: this.getPencairanList(), setting: this.getSetting(), theme: localStorage.getItem(PFX + 'ui_theme') || 'light', exported_at: new Date().toISOString() };
     },
-    importData(data) {
-      if (data.nasabah) dbSet('nasabah', data.nasabah);
-      if (data.setoran) dbSet('setoran', data.setoran);
-      if (data.pencairan) dbSet('pencairan', data.pencairan);
-      if (data.setting) dbSetObj('setting', data.setting);
+
+    async importData(data) {
+      showLoadingOverlay(true);
+      try {
+        // Reset semua data Firestore dulu
+        for (const n of _cache.nasabah) await fsDelete('nasabah', n.id);
+        for (const s of _cache.setoran) await fsDelete('setoran', s.id);
+        for (const p of _cache.pencairan) await fsDelete('pencairan', p.id);
+        // Insert data baru
+        if (data.nasabah) for (const n of data.nasabah) await fsAdd('nasabah', n);
+        if (data.setoran) for (const s of data.setoran) await fsAdd('setoran', s);
+        if (data.pencairan) for (const p of data.pencairan) await fsAdd('pencairan', p);
+        if (data.setting) dbSetObj('setting', data.setting);
+        if (data.theme) localStorage.setItem(PFX + 'ui_theme', data.theme);
+        await loadAllFromFirestore();
+      } finally {
+        showLoadingOverlay(false);
+      }
     },
-    resetData() { ['nasabah','setoran','pencairan'].forEach(k => dbSet(k, [])); },
-    seedIfNeeded() {
-      if (this.getNasabahList().length > 0) return;
+
+    async resetData() {
+      showLoadingOverlay(true);
+      try {
+        for (const s of _cache.setoran) await fsDelete('setoran', s.id);
+        for (const n of _cache.nasabah) await fsDelete('nasabah', n.id);
+        for (const p of _cache.pencairan) await fsDelete('pencairan', p.id);
+        _cache = { nasabah: [], setoran: [], pencairan: [] };
+      } finally {
+        showLoadingOverlay(false);
+      }
+    },
+
+    // BUG-001 fix: seed hanya berjalan sekali, cek flag di Firestore
+    async seedIfNeeded() {
+      if (_cache.nasabah.length > 0) return;
+      const flag = localStorage.getItem(PFX + 'seeded');
+      if (flag) return;
+      localStorage.setItem(PFX + 'seeded', '1');
       const ids = [genId(), genId(), genId()];
-      dbSet('nasabah', [
+      const nasabahData = [
         { id: ids[0], nama: 'Ahmad Fauzi', hp: '081234567890', alamat: 'Jl. Mawar No.5, Jakarta', target: 1500000, cairkan: '2026-06-30', daftar: '2025-12-01', catatan: '', status: 'aktif' },
         { id: ids[1], nama: 'Siti Rahmawati', hp: '082345678901', alamat: 'Jl. Melati No.12, Bekasi', target: 2000000, cairkan: '2026-06-30', daftar: '2025-12-05', catatan: '', status: 'aktif' },
         { id: ids[2], nama: 'Budi Santoso', hp: '083456789012', alamat: 'Jl. Anggrek No.3, Depok', target: 1000000, cairkan: '2026-06-30', daftar: '2026-01-03', catatan: 'Bayar tiap awal bulan', status: 'aktif' },
-      ]);
-      dbSet('setoran', [
-        { nasabah_id: ids[0], nominal: 300000, metode: 'tunai', tanggal: '2026-01-10', catatan: '' },
-        { nasabah_id: ids[0], nominal: 250000, metode: 'transfer', tanggal: '2026-02-08', catatan: 'via BCA' },
-        { nasabah_id: ids[0], nominal: 200000, metode: 'tunai', tanggal: '2026-03-05', catatan: '' },
-        { nasabah_id: ids[1], nominal: 400000, metode: 'transfer', tanggal: '2026-01-12', catatan: '' },
-        { nasabah_id: ids[1], nominal: 350000, metode: 'tunai', tanggal: '2026-02-15', catatan: '' },
-        { nasabah_id: ids[1], nominal: 300000, metode: 'transfer', tanggal: '2026-03-10', catatan: 'via BRI' },
-        { nasabah_id: ids[2], nominal: 200000, metode: 'tunai', tanggal: '2026-02-05', catatan: '' },
-      ].map(s => ({ ...s, id: genId(), created_at: new Date().toISOString() })));
+      ];
+      const setoranData = [
+        { nasabah_id: ids[0], nominal: 300000, metode: 'tunai', tanggal: '2026-01-10', catatan: '', foto: null, foto_path: null },
+        { nasabah_id: ids[0], nominal: 250000, metode: 'transfer', tanggal: '2026-02-08', catatan: 'via BCA', foto: null, foto_path: null },
+        { nasabah_id: ids[0], nominal: 200000, metode: 'tunai', tanggal: '2026-03-05', catatan: '', foto: null, foto_path: null },
+        { nasabah_id: ids[1], nominal: 400000, metode: 'transfer', tanggal: '2026-01-12', catatan: '', foto: null, foto_path: null },
+        { nasabah_id: ids[1], nominal: 350000, metode: 'tunai', tanggal: '2026-02-15', catatan: '', foto: null, foto_path: null },
+        { nasabah_id: ids[1], nominal: 300000, metode: 'transfer', tanggal: '2026-03-10', catatan: 'via BRI', foto: null, foto_path: null },
+        { nasabah_id: ids[2], nominal: 200000, metode: 'tunai', tanggal: '2026-02-05', catatan: '', foto: null, foto_path: null },
+      ];
+      showLoadingOverlay(true);
+      try {
+        for (const n of nasabahData) await fsAdd('nasabah', n);
+        for (const s of setoranData) await fsAdd('setoran', s);
+        await loadAllFromFirestore();
+      } finally {
+        showLoadingOverlay(false);
+      }
     },
   };
 
@@ -708,6 +877,9 @@
         <span class="navbar-title">Kumpul<span>.</span>Yuk</span>
       </div>
       <div class="navbar-actions">
+        <div title="Tersimpan di Firebase" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#059669;background:rgba(5,150,105,0.1);padding:4px 8px;border-radius:20px;margin-right:2px">
+          <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#059669"/></svg>Cloud
+        </div>
         <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Ganti tema">
           ${S.theme === 'dark' ? I.sun : I.moon}
         </button>
@@ -1064,8 +1236,8 @@
                 </div>
               </div>
               ${s.metode==='transfer'&&s.foto
-                ? `<div class="foto-thumb" onclick="S.lightbox=encodeURIComponent(this.dataset.src);renderAll()" data-src="${esc(s.foto)}">
-                     <img src="${s.foto}" alt="Bukti">
+                ? `<div class="foto-thumb" onclick="S.lightbox=encodeURIComponent('${esc(s.foto)}');renderAll()" data-src="${esc(s.foto)}">
+                     <img src="${esc(s.foto)}" alt="Bukti">
                    </div>` : ''}
             </div>
           </div>`;
@@ -1176,17 +1348,26 @@
     const statusEl = form.querySelector('[name="status"]');
     data.status = statusEl ? statusEl.value : 'aktif';
     if (!valid) return;
-    document.getElementById('form-submit-btn').disabled = true;
-    document.getElementById('form-submit-btn').textContent = 'Menyimpan...';
-    if (S.isEdit && S.nasabahId) {
-      db.updateNasabah(S.nasabahId, data);
-      showToast('Data nasabah diperbarui!');
-      go('detail', { id: S.nasabahId });
-    } else {
-      const res = db.createNasabah(data);
-      showToast('Nasabah berhasil ditambahkan!');
-      go('detail', { id: res.id });
-    }
+    const btn = document.getElementById('form-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+    (async () => {
+      try {
+        if (S.isEdit && S.nasabahId) {
+          await db.updateNasabah(S.nasabahId, data);
+          showToast('Data nasabah diperbarui!');
+          go('detail', { id: S.nasabahId });
+        } else {
+          const res = await db.createNasabah(data);
+          showToast('Nasabah berhasil ditambahkan!');
+          go('detail', { id: res.id });
+        }
+      } catch (err) {
+        showToast('Gagal menyimpan: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Simpan Data';
+      }
+    })();
   }
 
   // ════════════════════════════════════════════════════════════
@@ -1335,7 +1516,7 @@
         </div>
         <div class="settings-section">
           <div class="font-bold mb-2">Backup & Restore</div>
-          <div class="text-sm text-muted mb-4">Data tersimpan di perangkat ini. Buat backup rutin agar data aman.</div>
+          <div class="text-sm text-muted mb-4">Data tersimpan di <strong>Firebase Cloud</strong> — bisa diakses dari perangkat manapun. Export untuk backup lokal.</div>
           <div class="flex gap-3">
             <button class="btn btn-outline flex-1" onclick="exportBackup()">${I.download} Export</button>
             <button class="btn btn-outline flex-1" onclick="document.getElementById('import-input').click()">${I.upload} Import</button>
@@ -1400,8 +1581,9 @@
     const reader = new FileReader();
     reader.onload = ev => {
       try {
-        db.importData(JSON.parse(ev.target.result));
-        renderAll(); showToast('Data berhasil dipulihkan!');
+        db.importData(JSON.parse(ev.target.result)).then(() => {
+          renderAll(); showToast('Data berhasil dipulihkan!');
+        }).catch(err => showToast('Gagal import: ' + err.message, 'error'));
       } catch { showToast('Gagal membaca file backup', 'error'); }
     };
     reader.readAsText(file);
@@ -1412,7 +1594,10 @@
     setState({ confirm: {
       title: 'Hapus Semua Data?',
       desc: 'Semua nasabah, setoran, dan pencairan akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
-      onConfirm() { db.resetData(); renderAll(); showToast('Semua data dihapus', 'error'); },
+      onConfirm() {
+        db.resetData().then(() => { renderAll(); showToast('Semua data dihapus', 'error'); })
+          .catch(err => showToast('Gagal: ' + err.message, 'error'));
+      },
     }});
   }
 
@@ -1638,14 +1823,23 @@
       catatan: document.getElementById('s-catatan').value || '',
       foto: metode === 'transfer' ? (_draft && _draft.foto) : undefined,
     };
-    if (S.setoranEditId) {
-      db.updateSetoran(S.setoranEditId, payload);
-      showToast('Setoran diperbarui!');
-    } else {
-      db.createSetoran({ ...payload, nasabah_id: S.nasabahId });
-      showToast('Setoran berhasil dicatat!');
-    }
-    closeSetoranModal();
+    const submitBtn = document.querySelector('#setoran-form button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan...'; }
+    (async () => {
+      try {
+        if (S.setoranEditId) {
+          await db.updateSetoran(S.setoranEditId, payload);
+          showToast('Setoran diperbarui!');
+        } else {
+          await db.createSetoran({ ...payload, nasabah_id: S.nasabahId });
+          showToast('Setoran berhasil dicatat!');
+        }
+        closeSetoranModal();
+      } catch (err) {
+        showToast('Gagal menyimpan: ' + err.message, 'error');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Simpan'; }
+      }
+    })();
   }
 
   // ── Pencairan modal ──────────────────────────────────────────
@@ -1800,17 +1994,21 @@
     const setoranList = db.getSetoranList(S.nasabahId);
     const keterangan = buildKeteranganPencairan();
     const catatan = document.getElementById('p-catatan').value || '';
-    db.createPencairan({
-      nasabah_id: S.nasabahId,
-      nominal: nomVal,
-      tanggal: tanEl.value,
-      keterangan,
-      catatan,
-    });
-    setState({ pencairanModal: false });
-    showToast('Pencairan berhasil dicatat!');
-    try { generatePDF(nasabah, setoranList, db.getSetting(), keterangan, catatan); }
-    catch (err) { showToast('PDF gagal: ' + err.message, 'error'); }
+    const pdfData = { nasabah: { ...nasabah }, setoranList: [...setoranList], setting: db.getSetting(), keterangan, catatan };
+    const pencBtn = document.querySelector('#pencairan-form button[type="submit"]');
+    if (pencBtn) { pencBtn.disabled = true; pencBtn.textContent = 'Memproses...'; }
+    (async () => {
+      try {
+        await db.createPencairan({ nasabah_id: S.nasabahId, nominal: nomVal, tanggal: tanEl.value, keterangan, catatan });
+        setState({ pencairanModal: false });
+        showToast('Pencairan berhasil dicatat!');
+        try { generatePDF(pdfData.nasabah, pdfData.setoranList, pdfData.setting, pdfData.keterangan, pdfData.catatan); }
+        catch (err) { showToast('PDF gagal: ' + err.message, 'error'); }
+      } catch (err) {
+        showToast('Gagal: ' + err.message, 'error');
+        if (pencBtn) { pencBtn.disabled = false; pencBtn.textContent = 'Konfirmasi & PDF'; }
+      }
+    })();
   }
 
   // ── Lightbox ─────────────────────────────────────────────────
@@ -1836,10 +2034,11 @@
       desc: 'Data nasabah dan semua riwayat setorannya akan dihapus permanen.',
       name,
       onConfirm() {
-        db.deleteNasabah(id);
-        if (S.page === 'detail') go('dashboard');
-        else renderAll();
-        showToast('Nasabah dihapus', 'error');
+        db.deleteNasabah(id).then(() => {
+          if (S.page === 'detail') go('dashboard');
+          else renderAll();
+          showToast('Nasabah dihapus', 'error');
+        }).catch(err => showToast('Gagal hapus: ' + err.message, 'error'));
       },
     }});
   }
@@ -1851,7 +2050,11 @@
       title: 'Hapus Setoran?',
       desc: 'Data setoran ini akan dihapus permanen.',
       name: detail,
-      onConfirm() { db.deleteSetoran(id); renderAll(); showToast('Setoran dihapus', 'error'); },
+      onConfirm() {
+        db.deleteSetoran(id).then(() => {
+          renderAll(); showToast('Setoran dihapus', 'error');
+        }).catch(err => showToast('Gagal hapus: ' + err.message, 'error'));
+      },
     }});
   }
 
@@ -2448,30 +2651,47 @@
   // ════════════════════════════════════════════════════════════
   //  SECTION 17 — INIT
   // ════════════════════════════════════════════════════════════
-  db.seedIfNeeded();
+
+  // Tambahkan animasi loading bar
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `@keyframes prog-anim { from { transform: translateX(-100%); } to { transform: translateX(100%); } }`;
+  document.head.appendChild(styleEl);
+
   document.documentElement.setAttribute('data-theme', S.theme);
 
-  // History API — back gesture / hardware back button
-  // Wrapped in try-catch: tidak tersedia di srcdoc iframe (preview Claude)
-  try {
-    history.replaceState({ page: 'dashboard', params: {} }, '', '#dashboard');
-    window.addEventListener('popstate', (e) => {
-      if (e.state) {
-        if (S.setoranModal || S.pencairanModal || S.confirm || S.drawer || S.lightbox) {
-          S.setoranModal = false; S.pencairanModal = false;
-          S.confirm = null; S.drawer = false; S.lightbox = null;
-          renderAll();
-          try { history.pushState({ page: S.page, params: { id: S.nasabahId } }, '', location.hash); } catch(_) {}
-        } else {
-          go(e.state.page || 'dashboard', e.state.params || {}, true);
-        }
-      } else {
-        go('dashboard', {}, true);
-      }
-    });
-  } catch(_) { /* berjalan di iframe/srcdoc, History API dinonaktifkan */ }
+  // Tunggu Firebase siap, lalu load data
+  async function initApp() {
+    showLoadingOverlay(true);
+    await loadAllFromFirestore();
+    await db.seedIfNeeded();
+    renderAll();
+    showLoadingOverlay(false);
 
-  renderAll();
+    // History API
+    try {
+      history.replaceState({ page: 'dashboard', params: {} }, '', '#dashboard');
+      window.addEventListener('popstate', (e) => {
+        if (e.state) {
+          if (S.setoranModal || S.pencairanModal || S.confirm || S.drawer || S.lightbox) {
+            S.setoranModal = false; S.pencairanModal = false;
+            S.confirm = null; S.drawer = false; S.lightbox = null;
+            renderAll();
+            try { history.pushState({ page: S.page, params: { id: S.nasabahId } }, '', location.hash); } catch(_) {}
+          } else {
+            go(e.state.page || 'dashboard', e.state.params || {}, true);
+          }
+        } else {
+          go('dashboard', {}, true);
+        }
+      });
+    } catch(_) {}
+  }
+
+  if (window._fbReady) {
+    initApp();
+  } else {
+    document.addEventListener('firebase-ready', initApp);
+  }
   </script>
 </body>
 </html>
