@@ -1849,25 +1849,31 @@
 
 
   // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
   //  SECTION 17 — INIT
   // ════════════════════════════════════════════════════════════
-
-  // Tambahkan animasi loading bar
   const styleEl = document.createElement('style');
   styleEl.textContent = `@keyframes prog-anim { from { transform: translateX(-100%); } to { transform: translateX(100%); } }`;
   document.head.appendChild(styleEl);
 
   document.documentElement.setAttribute('data-theme', S.theme);
 
-  // Tunggu Firebase siap, lalu load data
   async function initApp() {
+    // Poll sampai window.db & loadAllFromFirestore tersedia dari firebase.js
+    let tries = 0;
+    while (!window.db || !window.loadAllFromFirestore) {
+      await new Promise(r => setTimeout(r, 100));
+      if (++tries > 50) {
+        showToast('Gagal konek Firebase. Cek koneksi internet.', 'error');
+        return;
+      }
+    }
     showLoadingOverlay(true);
     await loadAllFromFirestore();
     await db.seedIfNeeded();
     renderAll();
     showLoadingOverlay(false);
 
-    // History API
     try {
       history.replaceState({ page: 'dashboard', params: {} }, '', '#dashboard');
       window.addEventListener('popstate', (e) => {
@@ -1887,11 +1893,8 @@
     } catch(_) {}
   }
 
-  if (window._fbReady) {
-    initApp();
-  } else {
-    document.addEventListener('firebase-ready', initApp);
-  }
+  // Mulai langsung — initApp polling tunggu firebase.js siap
+  initApp();
   </script>
 </body>
 </html>
