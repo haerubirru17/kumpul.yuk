@@ -8,6 +8,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getFirestore, collection, doc,
   getDocs, addDoc, updateDoc, deleteDoc,
+  setDoc, getDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── Konfigurasi Firebase ──────────────────────────────────
@@ -23,13 +24,18 @@ const firebaseApp = initializeApp(firebaseConfig);
 const fdb = getFirestore(firebaseApp);
 
 // ── Cache in-memory ───────────────────────────────────────
-const PFX = 'ky1_';
 let _cache = { nasabah: [], setoran: [], pencairan: [] };
+let _cacheSetting = {};
 
-function dbGetObj(key) {
-  try { return JSON.parse(localStorage.getItem(PFX + key) || '{}'); } catch { return {}; }
+// ── Setting helpers (Firestore doc ID = "main") ───────────
+async function fsSaveSetting(data) {
+  await setDoc(doc(fdb, 'setting', 'main'), data);
+  _cacheSetting = { ...data };
 }
-function dbSetObj(key, val) { localStorage.setItem(PFX + key, JSON.stringify(val)); }
+async function fsGetSetting() {
+  const snap = await getDoc(doc(fdb, 'setting', 'main'));
+  return snap.exists() ? snap.data() : {};
+}
 
 // ── Firestore helpers ─────────────────────────────────────
 async function fsGetAll(colName) {
@@ -82,14 +88,16 @@ window.showLoadingOverlay = function(show) {
 window.loadAllFromFirestore = async function() {
   try {
     showLoadingOverlay(true);
-    const [nasabah, setoran, pencairan] = await Promise.all([
+    const [nasabah, setoran, pencairan, setting] = await Promise.all([
       fsGetAll('nasabah'),
       fsGetAll('setoran'),
       fsGetAll('pencairan'),
+      fsGetSetting(),
     ]);
     _cache.nasabah   = nasabah;
     _cache.setoran   = setoran;
     _cache.pencairan = pencairan;
+    _cacheSetting    = setting;
   } catch (err) {
     if (window.showToast) showToast('Gagal memuat data: ' + err.message, 'error');
     console.error('Firestore load error:', err);
@@ -106,8 +114,11 @@ window.db = {
   getNasabah(id)        { return _cache.nasabah.find(n => n.id === id); },
   getSetoranList(nId)   { return nId ? _cache.setoran.filter(s => s.nasabah_id === nId) : [..._cache.setoran]; },
   getPencairanList(nId) { return nId ? _cache.pencairan.filter(p => p.nasabah_id === nId) : [..._cache.pencairan]; },
-  getSetting()          { return dbGetObj('setting'); },
-  saveSetting(data)     { dbSetObj('setting', data); },
+  getSetting()          { return { ..._cacheSetting }; },
+  async saveSetting(data) {
+    await fsSaveSetting(data);
+    if (window.renderAll) renderAll();
+  },
 
   // WRITE — Firestore + update cache
   async createNasabah(data) {
@@ -193,7 +204,7 @@ window.db = {
       if (data.nasabah)   for (const n of data.nasabah)   await fsAdd('nasabah',   n);
       if (data.setoran)   for (const s of data.setoran)   await fsAdd('setoran',   s);
       if (data.pencairan) for (const p of data.pencairan) await fsAdd('pencairan', p);
-      if (data.setting)   dbSetObj('setting', data.setting);
+      if (data.setting)   await fsSaveSetting(data.setting);
       if (data.theme)     localStorage.setItem(PFX + 'ui_theme', data.theme);
       await loadAllFromFirestore();
     } finally {
