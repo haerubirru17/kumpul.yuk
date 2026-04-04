@@ -1873,7 +1873,6 @@
     }
     showLoadingOverlay(true);
     await loadAllFromFirestore();
-    await db.seedIfNeeded();
     renderAll();
     showLoadingOverlay(false);
 
