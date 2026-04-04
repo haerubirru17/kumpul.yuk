@@ -27,16 +27,6 @@ const fdb = getFirestore(firebaseApp);
 let _cache = { nasabah: [], setoran: [], pencairan: [] };
 let _cacheSetting = {};
 
-// ── Setting helpers (Firestore doc ID = "main") ───────────
-async function fsSaveSetting(data) {
-  await setDoc(doc(fdb, 'setting', 'main'), data);
-  _cacheSetting = { ...data };
-}
-async function fsGetSetting() {
-  const snap = await getDoc(doc(fdb, 'setting', 'main'));
-  return snap.exists() ? snap.data() : {};
-}
-
 // ── Firestore helpers ─────────────────────────────────────
 async function fsGetAll(colName) {
   const snap = await getDocs(collection(fdb, colName));
@@ -61,6 +51,21 @@ async function fsUpdate(colName, id, data) {
 
 async function fsDelete(colName, id) {
   await deleteDoc(doc(fdb, colName, id));
+}
+
+// ── Setting helpers — Firestore doc ID = "main" ───────────
+async function fsGetSetting() {
+  const snap = await getDoc(doc(fdb, 'setting', 'main'));
+  return snap.exists() ? snap.data() : {};
+}
+
+async function fsSaveSetting(data) {
+  // Bersihkan undefined/null sebelum kirim ke Firestore
+  const clean = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined && v !== null)
+  );
+  await setDoc(doc(fdb, 'setting', 'main'), clean);
+  _cacheSetting = { ...clean };
 }
 
 // ── Loading overlay ───────────────────────────────────────
@@ -115,12 +120,13 @@ window.db = {
   getSetoranList(nId)   { return nId ? _cache.setoran.filter(s => s.nasabah_id === nId) : [..._cache.setoran]; },
   getPencairanList(nId) { return nId ? _cache.pencairan.filter(p => p.nasabah_id === nId) : [..._cache.pencairan]; },
   getSetting()          { return { ..._cacheSetting }; },
+
+  // WRITE — Firestore + update cache
   async saveSetting(data) {
     await fsSaveSetting(data);
     if (window.renderAll) renderAll();
   },
 
-  // WRITE — Firestore + update cache
   async createNasabah(data) {
     const id = await fsAdd('nasabah', data);
     const item = { ...data, id };
@@ -148,7 +154,6 @@ window.db = {
   },
 
   async createSetoran(data) {
-    // Foto bukti (base64) disimpan langsung di Firestore
     const payload = {
       ...data,
       foto: (data.metode === 'transfer' && data.foto) ? data.foto : null,
@@ -186,11 +191,10 @@ window.db = {
   // Export / Import / Reset
   exportData() {
     return {
-      nasabah:    this.getNasabahList(),
-      setoran:    this.getSetoranList(),
-      pencairan:  this.getPencairanList(),
-      setting:    this.getSetting(),
-      theme:      localStorage.getItem(PFX + 'ui_theme') || 'light',
+      nasabah:     this.getNasabahList(),
+      setoran:     this.getSetoranList(),
+      pencairan:   this.getPencairanList(),
+      setting:     this.getSetting(),
       exported_at: new Date().toISOString(),
     };
   },
@@ -205,7 +209,6 @@ window.db = {
       if (data.setoran)   for (const s of data.setoran)   await fsAdd('setoran',   s);
       if (data.pencairan) for (const p of data.pencairan) await fsAdd('pencairan', p);
       if (data.setting)   await fsSaveSetting(data.setting);
-      if (data.theme)     localStorage.setItem(PFX + 'ui_theme', data.theme);
       await loadAllFromFirestore();
     } finally {
       showLoadingOverlay(false);
