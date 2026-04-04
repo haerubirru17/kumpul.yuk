@@ -11,7 +11,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, setDoc, getDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD2PH8Iaj7RGx3mhp1RNuqG03dy75iyINo",
@@ -27,7 +27,7 @@
     // Expose ke global scope
     window._fb = {
       db: firestoreDb,
-      collection, doc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp,
+      collection, doc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, setDoc, getDoc,
     };
 
     window._fbReady = true;
@@ -585,6 +585,7 @@
 
   // ── Cache in-memory (sinkron dari Firestore) ──
   let _cache = { nasabah: [], setoran: [], pencairan: [] };
+  let _cacheSetting = {};
   let _cacheReady = false;
 
   function dbGetObj(key) {
@@ -630,14 +631,21 @@
   async function loadAllFromFirestore() {
     try {
       showLoadingOverlay(true);
-      const [nasabah, setoran, pencairan] = await Promise.all([
+      async function _fsGetSetting() {
+        const { db: fdb, doc: fdoc, getDoc: gdc } = window._fb;
+        const snap = await gdc(fdoc(fdb, 'setting', 'main'));
+        return snap.exists() ? snap.data() : {};
+      }
+      const [nasabah, setoran, pencairan, setting] = await Promise.all([
         fsGetAll('nasabah'),
         fsGetAll('setoran'),
         fsGetAll('pencairan'),
+        _fsGetSetting(),
       ]);
       _cache.nasabah   = nasabah;
       _cache.setoran   = setoran;
       _cache.pencairan = pencairan;
+      _cacheSetting    = setting;
       _cacheReady = true;
     } catch (err) {
       showToast('Gagal memuat data: ' + err.message, 'error');
@@ -673,7 +681,7 @@
     getNasabah(id)         { return _cache.nasabah.find(n => n.id === id); },
     getSetoranList(nId)    { return nId ? _cache.setoran.filter(s => s.nasabah_id === nId) : [..._cache.setoran]; },
     getPencairanList(nId)  { return nId ? _cache.pencairan.filter(p => p.nasabah_id === nId) : [..._cache.pencairan]; },
-    getSetting()           { return dbGetObj('setting'); },
+    getSetting()           { return { ..._cacheSetting }; },
 
     // ── WRITE ── (update cache dulu, lalu Firestore async)
     async createNasabah(data) {
@@ -739,7 +747,13 @@
       return item;
     },
 
-    saveSetting(data) { dbSetObj('setting', data); },
+    async saveSetting(data) {
+      const { db: fdb, doc: fdoc, setDoc: sdc } = window._fb;
+      // Hapus field undefined sebelum kirim ke Firestore
+      const clean = Object.fromEntries(Object.entries(data).filter(([,v]) => v !== undefined && v !== null || typeof v === 'string'));
+      await sdc(fdoc(fdb, 'setting', 'main'), clean);
+      _cacheSetting = { ...clean };
+    },
 
     exportData() {
       return { nasabah: this.getNasabahList(), setoran: this.getSetoranList(), pencairan: this.getPencairanList(), setting: this.getSetting(), theme: localStorage.getItem(PFX + 'ui_theme') || 'light', exported_at: new Date().toISOString() };
@@ -756,7 +770,12 @@
         if (data.nasabah) for (const n of data.nasabah) await fsAdd('nasabah', n);
         if (data.setoran) for (const s of data.setoran) await fsAdd('setoran', s);
         if (data.pencairan) for (const p of data.pencairan) await fsAdd('pencairan', p);
-        if (data.setting) dbSetObj('setting', data.setting);
+        if (data.setting) {
+          const { db: fdb, doc: fdoc, setDoc: sdc } = window._fb;
+          const clean = Object.fromEntries(Object.entries(data.setting).filter(([,v]) => v !== undefined));
+          await sdc(fdoc(fdb, 'setting', 'main'), clean);
+          _cacheSetting = { ...clean };
+        }
         if (data.theme) localStorage.setItem(PFX + 'ui_theme', data.theme);
         await loadAllFromFirestore();
       } finally {
@@ -1532,38 +1551,50 @@
       </div>`;
   }
 
-  function submitSettings(e) {
+  async function submitSettings(e) {
     e.preventDefault();
     const form = e.target;
+    const btn = form.querySelector('[type="submit"]');
     const s = db.getSetting();
-    db.saveSetting({
-      lembaga: form.querySelector('[name="lembaga"]').value,
-      pengelola: form.querySelector('[name="pengelola"]').value,
-      jabatan: form.querySelector('[name="jabatan"]').value,
-      kontak: form.querySelector('[name="kontak"]').value,
-      kota: form.querySelector('[name="kota"]').value,
-      ttd: s.ttd,
-    });
-    showToast('Pengaturan disimpan!');
+    if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+    try {
+      await db.saveSetting({
+        lembaga:   form.querySelector('[name="lembaga"]').value.trim(),
+        pengelola: form.querySelector('[name="pengelola"]').value.trim(),
+        jabatan:   form.querySelector('[name="jabatan"]').value.trim(),
+        kontak:    form.querySelector('[name="kontak"]').value.trim(),
+        kota:      form.querySelector('[name="kota"]').value.trim(),
+        ttd:       s.ttd || '',
+      });
+      showToast('Pengaturan disimpan!');
+    } catch (err) {
+      showToast('Gagal menyimpan: ' + err.message, 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Simpan Pengaturan'; }
+    }
   }
 
   function handleTtdUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
+    reader.onload = async ev => {
       const s = db.getSetting();
-      db.saveSetting({ ...s, ttd: ev.target.result });
-      renderAll(); showToast('Tanda tangan diupload!');
+      try {
+        await db.saveSetting({ ...s, ttd: ev.target.result });
+        renderAll(); showToast('Tanda tangan diupload!');
+      } catch (err) { showToast('Gagal upload TTD: ' + err.message, 'error'); }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
   }
 
-  function removeTtd() {
+  async function removeTtd() {
     const s = db.getSetting();
-    db.saveSetting({ ...s, ttd: undefined });
-    renderAll();
+    try {
+      await db.saveSetting({ ...s, ttd: '' });
+      renderAll(); showToast('Tanda tangan dihapus.');
+    } catch (err) { showToast('Gagal hapus TTD: ' + err.message, 'error'); }
   }
 
   function exportBackup() {
@@ -2101,11 +2132,8 @@
   }, { passive: true });
 
   // ════════════════════════════════════════════════════════════
-  //  SECTION 16 — PDF GENERATION
-  // ════════════════════════════════════════════════════════════
-  // PDF functions moved to pdf.js
+  // PDF functions → pdf.js
 
-  // ════════════════════════════════════════════════════════════
   //  SECTION 17 — INIT
   // ════════════════════════════════════════════════════════════
 
