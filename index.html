@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="pdf.js"></script>
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -2172,10 +2171,27 @@
     } catch(_) {}
   }
 
+  // Load pdf.js setelah DOM & Firebase siap
+  function _loadPdfJs() {
+    const s = document.createElement('script');
+    s.src = 'pdf.js';
+    s.onerror = () => console.error('Gagal load pdf.js');
+    document.body.appendChild(s);
+  }
+
+  // Global error handler — tampilkan error di layar jika blank
+  window.onerror = function(msg, src, line, col, err) {
+    const el = document.getElementById('app') || document.body;
+    el.innerHTML = '<div style="padding:24px;font-family:monospace;color:red;background:#fff">'
+      + '<b>JS Error:</b><br>' + msg + '<br><small>' + src + ':' + line + '</small></div>';
+    return false;
+  };
+
   if (window._fbReady) {
     initApp();
+    _loadPdfJs();
   } else {
-    document.addEventListener('firebase-ready', initApp);
+    document.addEventListener('firebase-ready', () => { initApp(); _loadPdfJs(); });
   }
   </script>
 </body>
