@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- cache-bust: 1775350230 -->
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -794,36 +795,7 @@
       }
     },
 
-    // BUG-001 fix: seed hanya berjalan sekali, cek flag di Firestore
-    async seedIfNeeded() {
-      if (_cache.nasabah.length > 0) return;
-      const flag = localStorage.getItem(PFX + 'seeded');
-      if (flag) return;
-      localStorage.setItem(PFX + 'seeded', '1');
-      const ids = [genId(), genId(), genId()];
-      const nasabahData = [
-        { id: ids[0], nama: 'Ahmad Fauzi', hp: '081234567890', alamat: 'Jl. Mawar No.5, Jakarta', target: 1500000, cairkan: '2026-06-30', daftar: '2025-12-01', catatan: '', status: 'aktif' },
-        { id: ids[1], nama: 'Siti Rahmawati', hp: '082345678901', alamat: 'Jl. Melati No.12, Bekasi', target: 2000000, cairkan: '2026-06-30', daftar: '2025-12-05', catatan: '', status: 'aktif' },
-        { id: ids[2], nama: 'Budi Santoso', hp: '083456789012', alamat: 'Jl. Anggrek No.3, Depok', target: 1000000, cairkan: '2026-06-30', daftar: '2026-01-03', catatan: 'Bayar tiap awal bulan', status: 'aktif' },
-      ];
-      const setoranData = [
-        { nasabah_id: ids[0], nominal: 300000, metode: 'tunai', tanggal: '2026-01-10', catatan: '', foto: null, foto_path: null },
-        { nasabah_id: ids[0], nominal: 250000, metode: 'transfer', tanggal: '2026-02-08', catatan: 'via BCA', foto: null, foto_path: null },
-        { nasabah_id: ids[0], nominal: 200000, metode: 'tunai', tanggal: '2026-03-05', catatan: '', foto: null, foto_path: null },
-        { nasabah_id: ids[1], nominal: 400000, metode: 'transfer', tanggal: '2026-01-12', catatan: '', foto: null, foto_path: null },
-        { nasabah_id: ids[1], nominal: 350000, metode: 'tunai', tanggal: '2026-02-15', catatan: '', foto: null, foto_path: null },
-        { nasabah_id: ids[1], nominal: 300000, metode: 'transfer', tanggal: '2026-03-10', catatan: 'via BRI', foto: null, foto_path: null },
-        { nasabah_id: ids[2], nominal: 200000, metode: 'tunai', tanggal: '2026-02-05', catatan: '', foto: null, foto_path: null },
-      ];
-      showLoadingOverlay(true);
-      try {
-        for (const n of nasabahData) await fsAdd('nasabah', n);
-        for (const s of setoranData) await fsAdd('setoran', s);
-        await loadAllFromFirestore();
-      } finally {
-        showLoadingOverlay(false);
-      }
-    },
+
   };
 
   // ════════════════════════════════════════════════════════════
@@ -2147,7 +2119,6 @@
   async function initApp() {
     showLoadingOverlay(true);
     await loadAllFromFirestore();
-    await db.seedIfNeeded();
     renderAll();
     showLoadingOverlay(false);
 
