@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- cache-bust: 1775350230 -->
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -420,6 +419,10 @@
     .p-ico { width: 42px; height: 42px; border-radius: 12px; background: var(--success-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--success); }
 
     /* ── Settings ── */
+    .pill-btn { padding:7px 14px; border-radius:99px; border:1.5px solid var(--border); background:var(--bg-card); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; color:var(--text); font-family:var(--font); }
+    .pill-btn:active { opacity:0.8; }
+    .pill-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600; }
+    .form-hint { font-size:11px; color:var(--text-muted); margin-top:4px; }
     .settings-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 22px; box-shadow: var(--shadow-sm); }
     .settings-danger { background: var(--danger-light); border: 1px solid rgba(220,38,38,.25); border-radius: 24px; padding: 22px; }
     .s-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; }
@@ -510,6 +513,7 @@
     zoomIn: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`,
     more: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg>`,
     alert: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    calculator: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>`,
     settings: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
     home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   };
@@ -633,14 +637,11 @@
       showLoadingOverlay(true);
       async function _fsGetSetting() {
         const { db: fdb, doc: fdoc, getDoc: gdc } = window._fb;
-        const snap = await gdc(fdoc(fdb, 'setting', 'main'));
-        return snap.exists() ? snap.data() : {};
+        try { const snap = await gdc(fdoc(fdb, 'setting', 'main')); return snap.exists() ? snap.data() : {}; }
+        catch { return {}; }
       }
       const [nasabah, setoran, pencairan, setting] = await Promise.all([
-        fsGetAll('nasabah'),
-        fsGetAll('setoran'),
-        fsGetAll('pencairan'),
-        _fsGetSetting(),
+        fsGetAll('nasabah'), fsGetAll('setoran'), fsGetAll('pencairan'), _fsGetSetting(),
       ]);
       _cache.nasabah   = nasabah;
       _cache.setoran   = setoran;
@@ -749,8 +750,7 @@
 
     async saveSetting(data) {
       const { db: fdb, doc: fdoc, setDoc: sdc } = window._fb;
-      // Hapus field undefined sebelum kirim ke Firestore
-      const clean = Object.fromEntries(Object.entries(data).filter(([,v]) => v !== undefined && v !== null || typeof v === 'string'));
+      const clean = Object.fromEntries(Object.entries(data).filter(([,v]) => v !== undefined && v !== null));
       await sdc(fdoc(fdb, 'setting', 'main'), clean);
       _cacheSetting = { ...clean };
     },
@@ -772,7 +772,7 @@
         if (data.pencairan) for (const p of data.pencairan) await fsAdd('pencairan', p);
         if (data.setting) {
           const { db: fdb, doc: fdoc, setDoc: sdc } = window._fb;
-          const clean = Object.fromEntries(Object.entries(data.setting).filter(([,v]) => v !== undefined));
+          const clean = Object.fromEntries(Object.entries(data.setting).filter(([,v]) => v !== undefined && v !== null));
           await sdc(fdoc(fdb, 'setting', 'main'), clean);
           _cacheSetting = { ...clean };
         }
@@ -795,14 +795,13 @@
       }
     },
 
-
   };
 
   // ════════════════════════════════════════════════════════════
   //  SECTION 4 — APP STATE
   // ════════════════════════════════════════════════════════════
   let S = {
-    page: 'dashboard',   // 'dashboard' | 'detail' | 'form' | 'pencairan' | 'settings'
+    page: 'dashboard',   // 'dashboard' | 'detail' | 'form' | 'pencairan' | 'settings' | 'kalkulator'
     nasabahId: null,
     isEdit: false,
     search: '',
@@ -858,6 +857,7 @@
     if (S.page === 'form')      return buildForm();
     if (S.page === 'pencairan') return buildPencairan();
     if (S.page === 'settings')  return buildSettings();
+    if (S.page === 'kalkulator') return buildKalkulator();
     return buildDashboard();
   }
 
@@ -1457,6 +1457,11 @@
                 <label class="form-label">Kota (untuk surat)</label>
                 <input class="form-ctrl" name="kota" placeholder="Jakarta" value="${esc(s.kota||'')}">
               </div>
+              <div>
+                <label class="form-label">Tanggal Mulai Program</label>
+                <input class="form-ctrl" type="date" name="tgl_mulai_prog" value="${esc(s.tgl_mulai_prog||'')}">
+                <div class="form-hint">Berlaku untuk semua nasabah baru. Contoh: 1 Mei 2026</div>
+              </div>
             </div>
             <div class="form-group mb-5">
               <label class="form-label">Tanda Tangan Digital</label>
@@ -1530,12 +1535,13 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
     try {
       await db.saveSetting({
-        lembaga:   form.querySelector('[name="lembaga"]').value.trim(),
-        pengelola: form.querySelector('[name="pengelola"]').value.trim(),
-        jabatan:   form.querySelector('[name="jabatan"]').value.trim(),
-        kontak:    form.querySelector('[name="kontak"]').value.trim(),
-        kota:      form.querySelector('[name="kota"]').value.trim(),
-        ttd:       s.ttd || '',
+        lembaga:        form.querySelector('[name="lembaga"]').value.trim(),
+        pengelola:      form.querySelector('[name="pengelola"]').value.trim(),
+        jabatan:        form.querySelector('[name="jabatan"]').value.trim(),
+        kontak:         form.querySelector('[name="kontak"]').value.trim(),
+        kota:           form.querySelector('[name="kota"]').value.trim(),
+        tgl_mulai_prog: form.querySelector('[name="tgl_mulai_prog"]').value,
+        ttd:            s.ttd || '',
       });
       showToast('Pengaturan disimpan!');
     } catch (err) {
@@ -1551,21 +1557,16 @@
     const reader = new FileReader();
     reader.onload = async ev => {
       const s = db.getSetting();
-      try {
-        await db.saveSetting({ ...s, ttd: ev.target.result });
-        renderAll(); showToast('Tanda tangan diupload!');
-      } catch (err) { showToast('Gagal upload TTD: ' + err.message, 'error'); }
+      try { await db.saveSetting({ ...s, ttd: ev.target.result }); renderAll(); showToast('Tanda tangan diupload!'); }
+      catch (err) { showToast('Gagal upload TTD: ' + err.message, 'error'); }
     };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    reader.readAsDataURL(file); e.target.value = '';
   }
 
   async function removeTtd() {
     const s = db.getSetting();
-    try {
-      await db.saveSetting({ ...s, ttd: '' });
-      renderAll(); showToast('Tanda tangan dihapus.');
-    } catch (err) { showToast('Gagal hapus TTD: ' + err.message, 'error'); }
+    try { await db.saveSetting({ ...s, ttd: '' }); renderAll(); showToast('Tanda tangan dihapus.'); }
+    catch (err) { showToast('Gagal hapus TTD: ' + err.message, 'error'); }
   }
 
   function exportBackup() {
@@ -1622,6 +1623,7 @@
     const links = [
       { icon: I.home, label: 'Dashboard', page: 'dashboard' },
       { icon: I.history, label: 'Rekap Pencairan', page: 'pencairan' },
+      { icon: I.calculator, label: 'Kalkulator', page: 'kalkulator' },
       { icon: I.settings, label: 'Pengaturan', page: 'settings' },
     ];
     return `
@@ -2093,7 +2095,7 @@
   let _touchStartX = 0;
   document.addEventListener('touchstart', e => { _touchStartX = e.touches[0].clientX; }, { passive: true });
   document.addEventListener('touchend', e => {
-    if (!['detail','form','pencairan','settings'].includes(S.page)) return;
+    if (!['detail','form','pencairan','settings','kalkulator'].includes(S.page)) return;
     const dx = e.changedTouches[0].clientX - _touchStartX;
     if (dx > 80 && _touchStartX < 40) {
       if (S.page === 'detail') go('dashboard');
@@ -2104,6 +2106,220 @@
 
   // ════════════════════════════════════════════════════════════
   // PDF functions → pdf.js
+
+  // ════════════════════════════════════════════════════════════
+  //  SECTION 16b — KALKULATOR PROYEKSI
+  // ════════════════════════════════════════════════════════════
+  function buildKalkulator() {
+    const s = db.getSetting();
+    const tglMulaiProg = s.tgl_mulai_prog || '';
+    if (!window._kalk) {
+      window._kalk = { nominal: '100000', durasi: '10' };
+    }
+    const k = window._kalk;
+    return `
+      ${pageHeader('Kalkulator Proyeksi', "go('dashboard')")}
+      <div style="padding:0 16px 80px">
+        ${!tglMulaiProg ? `<div class="card" style="background:var(--warn-light);border:1px solid var(--warn);margin-bottom:14px">
+          <div style="font-size:13px;color:var(--warn);font-weight:600">⚠ Tanggal mulai program belum diset</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Buka Pengaturan → isi Tanggal Mulai Program terlebih dahulu.</div>
+        </div>` : ''}
+        <div class="card" style="margin-bottom:14px">
+          <div class="font-bold mb-3" style="color:var(--primary);font-size:13px;display:flex;align-items:center;gap:6px">
+            <span style="display:block;width:3px;height:14px;background:var(--primary);border-radius:2px"></span>
+            Parameter Tabungan
+          </div>
+          <div style="margin-bottom:14px">
+            <div class="form-label">Nominal per Hari</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${ [['50000','Rp 50.000'],['100000','Rp 100.000'],['custom','Custom']].map(([n,label]) =>
+                '<button class="pill-btn'+(k.nominal===n?' active':'')+'" data-ktype="nominal" data-kval="'+n+'" onclick="kalkSet(this.dataset.ktype,this.dataset.kval,this)">'+label+'</button>'
+              ).join('') }
+            </div>
+            <div id="kalk-custom-wrap" style="display:${k.nominal!=='50000'&&k.nominal!=='100000'?'block':'none'};margin-top:8px">
+              <input class="form-ctrl" type="number" id="kalk-nominal-val" placeholder="Nominal per hari" min="1000" step="1000"
+                value="${k.nominal!=='50000'&&k.nominal!=='100000'?k.nominal:''}"
+                oninput="window._kalk.nominalVal=parseInt(this.value)||0;kalkHitung()">
+            </div>
+          </div>
+          <div style="margin-bottom:4px">
+            <div class="form-label">Durasi</div>
+            <div style="display:flex;gap:8px">
+              ${ ['10','12'].map(d =>
+                '<button class="pill-btn'+(k.durasi===d?' active':'')+'" data-ktype="durasi" data-kval="'+d+'" onclick="kalkSet(this.dataset.ktype,this.dataset.kval,this)">'+d+' Bulan</button>'
+              ).join('') }
+            </div>
+          </div>
+          ${tglMulaiProg ? `<div style="margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:10px;font-size:12px;color:var(--text-muted)">
+            Tanggal mulai: <strong style="color:var(--text)">${new Date(tglMulaiProg+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}</strong>
+          </div>` : ''}
+        </div>
+        <div id="kalk-hasil"></div>
+      </div>`;
+  }
+
+  window._kalk = window._kalk || { nominal: '100000', durasi: '10', nominalVal: 0 };
+
+  function kalkSet(type, val, el) {
+    const group = el.parentElement;
+    group.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    window._kalk[type] = val;
+    if (type === 'nominal') {
+      const wrap = document.getElementById('kalk-custom-wrap');
+      if (wrap) wrap.style.display = (val !== '50000' && val !== '100000') ? 'block' : 'none';
+    }
+    kalkHitung();
+  }
+
+  function kalkGetNominal() {
+    const k = window._kalk;
+    if (k.nominal === '50000') return 50000;
+    if (k.nominal === '100000') return 100000;
+    return k.nominalVal || 0;
+  }
+
+  function kalkHitung() {
+    const nominal = kalkGetNominal();
+    const durasi  = parseInt(window._kalk.durasi || '10');
+    const s       = db.getSetting();
+    const tglStr  = s.tgl_mulai_prog || '';
+    const el      = document.getElementById('kalk-hasil');
+    if (!el) return;
+
+    if (!nominal || nominal <= 0 || !tglStr) {
+      el.innerHTML = '<div class="card" style="text-align:center;padding:28px;color:var(--text-muted)">'
+        + '<div style="font-size:32px;margin-bottom:8px">📊</div>'
+        + '<div style="font-weight:600;margin-bottom:4px">Hasil proyeksi muncul di sini</div>'
+        + '<div style="font-size:12px">' + (!tglStr ? 'Set tanggal mulai di Pengaturan dulu' : 'Masukkan nominal') + '</div>'
+        + '</div>';
+      return;
+    }
+
+    const tgl = new Date(tglStr + 'T00:00:00');
+
+    // Hitung tglAkhir: tgl + durasi bulan - 1 hari, fallback jika overflow
+    const _endM = tgl.getMonth() + durasi;
+    const _endY = tgl.getFullYear() + Math.floor(_endM / 12);
+    const _endMo = _endM % 12;
+    const _lastOfEnd = new Date(_endY, _endMo + 1, 0).getDate();
+    let tglAkhir;
+    if (tgl.getDate() > _lastOfEnd) {
+      tglAkhir = new Date(_endY, _endMo, _lastOfEnd);
+    } else {
+      tglAkhir = new Date(_endY, _endMo, tgl.getDate() - 1);
+    }
+
+    const totalHari = Math.round((tglAkhir - tgl) / 86400000) + 1;
+    const totalDana = totalHari * nominal;
+    const fmtRp  = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const fmtTgl = d => d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+
+    // Breakdown per bulan
+    const rows = [];
+    let cur = new Date(tgl);
+    while (cur <= tglAkhir) {
+      const yr = cur.getFullYear(), mo = cur.getMonth();
+      const lastOfMonth = new Date(yr, mo + 1, 0).getDate();
+      const isLast = (yr === tglAkhir.getFullYear() && mo === tglAkhir.getMonth());
+      const dayStart = cur.getDate();
+      const dayEnd   = isLast ? tglAkhir.getDate() : lastOfMonth;
+      const hari = dayEnd - dayStart + 1;
+      rows.push({ bulan: new Date(yr, mo, 1).toLocaleDateString('id-ID',{month:'long',year:'numeric'}), hari, dana: hari * nominal });
+      if (isLast) break;
+      cur = new Date(yr, mo + 1, 1);
+    }
+
+    const totalCheck = rows.reduce((a,r) => a + r.hari, 0);
+
+    el.innerHTML = '<div class="card" style="background:linear-gradient(135deg,#0c5f73,#0e7490);color:#fff;margin-bottom:14px">'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;opacity:.75;text-transform:uppercase;margin-bottom:10px">Total Proyeksi Dana</div>'
+      + '<div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px">' + fmtRp(totalDana) + '</div>'
+      + '<div style="font-size:12px;opacity:.7;margin-bottom:16px">' + fmtTgl(tgl) + ' — ' + fmtTgl(tglAkhir) + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      + [['Total Hari', totalHari+' hari'],['Durasi',durasi+' bulan'],['Per Hari',fmtRp(nominal)],['Selesai',fmtTgl(tglAkhir)]]
+        .map(([l,v]) => '<div style="background:rgba(255,255,255,.12);border-radius:8px;padding:8px 10px">'
+          + '<div style="font-size:10px;opacity:.7;margin-bottom:2px">'+l+'</div>'
+          + '<div style="font-size:13px;font-weight:700">'+v+'</div></div>').join('')
+      + '</div></div>'
+      + '<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">'
+      + '<div style="padding:14px 16px 10px;font-weight:700;font-size:13px;color:var(--primary)">Breakdown per Bulan</div>'
+      + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+      + '<thead><tr style="background:var(--primary);color:#fff">'
+      + '<th style="padding:8px 12px;text-align:left;font-size:11px">Bulan</th>'
+      + '<th style="padding:8px 12px;text-align:right;font-size:11px">Hari</th>'
+      + '<th style="padding:8px 12px;text-align:right;font-size:11px">Total</th>'
+      + '</tr></thead><tbody>'
+      + rows.map((r,i) => '<tr style="'+(i%2===0?'background:#f8fbfc':'')+'">'
+          + '<td style="padding:7px 12px;border-bottom:1px solid var(--border)">'+r.bulan+'</td>'
+          + '<td style="padding:7px 12px;border-bottom:1px solid var(--border);text-align:right">'+r.hari+' hari</td>'
+          + '<td style="padding:7px 12px;border-bottom:1px solid var(--border);text-align:right;color:var(--primary);font-weight:600">'+fmtRp(r.dana)+'</td>'
+          + '</tr>').join('')
+      + '<tr style="background:var(--primary);color:#fff">'
+      + '<td style="padding:8px 12px;font-weight:700">Total</td>'
+      + '<td style="padding:8px 12px;text-align:right;font-weight:700">'+totalCheck+' hari</td>'
+      + '<td style="padding:8px 12px;text-align:right;font-weight:700">'+fmtRp(totalDana)+'</td>'
+      + '</tr></tbody></table></div></div>'
+      + '<div style="display:flex;gap:10px;margin-bottom:14px">'
+      + '<button class="btn btn-outline flex-1" onclick="kalkShare()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Share</button>'
+      + '<button class="btn btn-primary flex-1" onclick="kalkDaftarkan()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> Daftarkan Nasabah</button>'
+      + '</div>';
+  }
+
+  function kalkShare() {
+    const nominal = kalkGetNominal();
+    const durasi  = parseInt(window._kalk.durasi || '10');
+    const s       = db.getSetting();
+    const tglStr  = s.tgl_mulai_prog || '';
+    if (!nominal || !tglStr) return;
+    const tgl = new Date(tglStr + 'T00:00:00');
+    const _endM = tgl.getMonth() + durasi;
+    const _endY = tgl.getFullYear() + Math.floor(_endM / 12);
+    const _endMo = _endM % 12;
+    const _lastOfEnd = new Date(_endY, _endMo + 1, 0).getDate();
+    let tglAkhir = tgl.getDate() > _lastOfEnd
+      ? new Date(_endY, _endMo, _lastOfEnd)
+      : new Date(_endY, _endMo, tgl.getDate() - 1);
+    const totalHari = Math.round((tglAkhir - tgl) / 86400000) + 1;
+    const fmtRp  = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const fmtTgl = d => d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    const txt = '📊 *Proyeksi Tabungan*\n\n'
+      + 'Nominal/hari : ' + fmtRp(nominal) + '\n'
+      + 'Durasi       : ' + durasi + ' bulan\n'
+      + 'Mulai        : ' + fmtTgl(tgl) + '\n'
+      + 'Selesai      : ' + fmtTgl(tglAkhir) + '\n'
+      + 'Total hari   : ' + totalHari + ' hari\n\n'
+      + '💰 *Total: ' + fmtRp(totalHari * nominal) + '*';
+    if (navigator.share) navigator.share({ text: txt });
+    else if (navigator.clipboard) { navigator.clipboard.writeText(txt); showToast('Teks proyeksi disalin!'); }
+  }
+
+  function kalkDaftarkan() {
+    const nominal = kalkGetNominal();
+    const durasi  = parseInt(window._kalk.durasi || '10');
+    const s       = db.getSetting();
+    const tglStr  = s.tgl_mulai_prog || '';
+    if (!nominal || nominal <= 0) { showToast('Masukkan nominal dulu', 'error'); return; }
+    if (!tglStr) { showToast('Set tanggal mulai di Pengaturan dulu', 'error'); return; }
+    const tgl = new Date(tglStr + 'T00:00:00');
+    const _endM = tgl.getMonth() + durasi;
+    const _endY = tgl.getFullYear() + Math.floor(_endM / 12);
+    const _endMo = _endM % 12;
+    const _lastOfEnd = new Date(_endY, _endMo + 1, 0).getDate();
+    let tglAkhir = tgl.getDate() > _lastOfEnd
+      ? new Date(_endY, _endMo, _lastOfEnd)
+      : new Date(_endY, _endMo, tgl.getDate() - 1);
+    const totalHari = Math.round((tglAkhir - tgl) / 86400000) + 1;
+    window._kalkProyeksi = {
+      nominal_angsuran: nominal,
+      frekuensi: 'harian',
+      durasi_bulan: durasi,
+      tgl_mulai: tglStr,
+      cairkan: tglAkhir.toISOString().slice(0,10),
+      target: totalHari * nominal,
+    };
+    go('form');
+  }
 
   //  SECTION 17 — INIT
   // ════════════════════════════════════════════════════════════
@@ -2142,28 +2358,14 @@
     } catch(_) {}
   }
 
-  // Load pdf.js setelah DOM & Firebase siap
   function _loadPdfJs() {
     const s = document.createElement('script');
     s.src = 'pdf.js';
     s.onerror = () => console.error('Gagal load pdf.js');
     document.body.appendChild(s);
   }
-
-  // Global error handler — tampilkan error di layar jika blank
-  window.onerror = function(msg, src, line, col, err) {
-    const el = document.getElementById('app') || document.body;
-    el.innerHTML = '<div style="padding:24px;font-family:monospace;color:red;background:#fff">'
-      + '<b>JS Error:</b><br>' + msg + '<br><small>' + src + ':' + line + '</small></div>';
-    return false;
-  };
-
-  if (window._fbReady) {
-    initApp();
-    _loadPdfJs();
-  } else {
-    document.addEventListener('firebase-ready', () => { initApp(); _loadPdfJs(); });
-  }
+  if (window._fbReady) { initApp(); _loadPdfJs(); }
+  else { document.addEventListener('firebase-ready', () => { initApp(); _loadPdfJs(); }); }
   </script>
 </body>
 </html>
