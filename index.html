@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1289,7 +1290,7 @@
   function buildForm() {
     const nasabah = S.isEdit ? db.getNasabah(S.nasabahId) : null;
     const _kp = (!S.isEdit && window._kalkProyeksi) ? window._kalkProyeksi : null;
-    const v = nasabah || { nama:'', hp:'', alamat:'', target:_kp?_kp.target:'', cairkan:_kp?_kp.cairkan:'', daftar:todayStr(), catatan:'', status:'aktif' };
+    const v = nasabah || { nama:'', hp:'', alamat:'', target:_kp?_kp.target:'', cairkan:_kp?_kp.cairkan:'', daftar:_kp?_kp.tgl_mulai:todayStr(), catatan:'', status:'aktif' };
     const backFn = S.isEdit ? `go('detail',{id:'${S.nasabahId}'})` : `go('dashboard')`;
 
     return `
@@ -2148,10 +2149,12 @@
   //  SECTION 16b — KALKULATOR PROYEKSI
   // ════════════════════════════════════════════════════════════
   function buildKalkulator() {
-    const s = db.getSetting();
-    const tglStr = s.tgl_mulai_prog || '';
-    if (!window._kalk) window._kalk = { nominal: '100000', durasi: '10', nominalVal: 0 };
+    if (!window._kalk) window._kalk = { nominal: '100000', durasi: '10', nominalVal: 0, tglMulai: todayStr() };
     const k = window._kalk;
+    // Gunakan tanggal dari input kalkulator langsung (bukan dari pengaturan)
+    if (!k.tglMulai) k.tglMulai = todayStr();
+    const tglStr = k.tglMulai;
+
     const fmtTgl = d => d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
     const fmtRp  = n => 'Rp\u00a0' + Math.round(n).toLocaleString('id-ID');
 
@@ -2185,52 +2188,69 @@
     const durasi  = parseInt(k.durasi||'10');
     const proj    = nominal > 0 && tglStr ? calcProyeksi(nominal, durasi, tglStr) : null;
 
+    // Hitung tglAkhir untuk ditampilkan di input (info saja)
+    const tglAkhirInfo = tglStr ? (() => {
+      const tgl = new Date(tglStr + 'T00:00:00');
+      const _endM = tgl.getMonth() + durasi;
+      const _endY = tgl.getFullYear() + Math.floor(_endM / 12);
+      const _endMo = _endM % 12;
+      const _lastOfEnd = new Date(_endY, _endMo + 1, 0).getDate();
+      return tgl.getDate() > _lastOfEnd
+        ? new Date(_endY, _endMo, _lastOfEnd)
+        : new Date(_endY, _endMo, tgl.getDate() - 1);
+    })() : null;
+
     const previewHtml = proj
-      ? '<div class="card" style="background:linear-gradient(135deg,#0c5f73,#0e7490);color:#fff;margin-bottom:14px">'
-        + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;opacity:.75;text-transform:uppercase;margin-bottom:10px">Total Proyeksi Dana</div>'
-        + '<div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px">' + fmtRp(proj.totalDana) + '</div>'
-        + '<div style="font-size:12px;opacity:.7;margin-bottom:16px">' + fmtTgl(proj.tgl) + ' \u2014 ' + fmtTgl(proj.tglAkhir) + '</div>'
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-        + [['Total Hari',proj.totalHari+' hari'],['Durasi',durasi+' bulan'],['Per Hari',fmtRp(nominal)],['Selesai',fmtTgl(proj.tglAkhir)]]
-          .map(([l,v]) => '<div style="background:rgba(255,255,255,.12);border-radius:8px;padding:8px 10px">'
-            + '<div style="font-size:10px;opacity:.7;margin-bottom:2px">'+l+'</div>'
-            + '<div style="font-size:13px;font-weight:700">'+v+'</div></div>').join('')
+      ? '<div id="kalk-preview-card" style="margin-bottom:14px">'
+        // ── Hero total ──
+        + '<div style="background:linear-gradient(135deg,#0c5f73 0%,#0e7490 100%);border-radius:20px;padding:20px 20px 18px;color:#fff;margin-bottom:12px;box-shadow:0 4px 20px rgba(14,116,144,0.28)">'
+        + '<div style="font-size:10px;font-weight:700;letter-spacing:1.8px;opacity:.7;text-transform:uppercase;margin-bottom:8px">Total Proyeksi Dana</div>'
+        + '<div style="font-size:30px;font-weight:800;letter-spacing:-0.5px;line-height:1;margin-bottom:6px">' + fmtRp(proj.totalDana) + '</div>'
+        + '<div style="font-size:12px;opacity:.75;margin-bottom:18px;font-weight:500">' + fmtTgl(proj.tgl) + ' &mdash; ' + fmtTgl(proj.tglAkhir) + '</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">'
+        + [['Total Hari',proj.totalHari+' hari'],['Durasi',durasi+' bln'],['Per Hari',fmtRp(nominal)],['Selesai',fmtTgl(proj.tglAkhir)]]
+          .map(([l,v]) => '<div style="background:rgba(255,255,255,.13);border-radius:10px;padding:8px 6px;text-align:center">'
+            + '<div style="font-size:9px;opacity:.65;margin-bottom:3px;font-weight:600;letter-spacing:.04em">'+l+'</div>'
+            + '<div style="font-size:11px;font-weight:700;line-height:1.3">'+v+'</div></div>').join('')
         + '</div></div>'
-        + '<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">'
-        + '<div style="padding:14px 16px 10px;font-weight:700;font-size:13px;color:var(--primary)">Breakdown per Bulan</div>'
-        + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+        // ── Breakdown table ──
+        + '<div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">'
+        + '<div style="padding:14px 16px 10px;font-weight:700;font-size:13px;color:var(--primary);display:flex;align-items:center;gap:6px">'
+        + '<span style="display:block;width:3px;height:14px;background:var(--primary);border-radius:2px"></span>Breakdown per Bulan</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:13px">'
         + '<thead><tr style="background:var(--primary);color:#fff">'
-        + '<th style="padding:8px 12px;text-align:left;font-size:11px">Bulan</th>'
-        + '<th style="padding:8px 12px;text-align:right;font-size:11px">Hari</th>'
-        + '<th style="padding:8px 12px;text-align:right;font-size:11px">Total</th>'
+        + '<th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:700">Bulan</th>'
+        + '<th style="padding:8px 14px;text-align:right;font-size:11px;font-weight:700">Hari</th>'
+        + '<th style="padding:8px 14px;text-align:right;font-size:11px;font-weight:700">Total</th>'
         + '</tr></thead><tbody>'
-        + proj.rows.map((r,i) => '<tr style="'+(i%2===0?'background:#f8fbfc':'')+'">'
-            + '<td style="padding:7px 12px;border-bottom:1px solid var(--border)">'+r.bulan+'</td>'
-            + '<td style="padding:7px 12px;border-bottom:1px solid var(--border);text-align:right">'+r.hari+' hari</td>'
-            + '<td style="padding:7px 12px;border-bottom:1px solid var(--border);text-align:right;color:var(--primary);font-weight:600">'+fmtRp(r.dana)+'</td>'
+        + proj.rows.map((r,i) => '<tr style="background:'+(i%2===0?'var(--bg-card)':'var(--bg-muted)')+'">'
+            + '<td style="padding:9px 14px;border-bottom:1px solid var(--border);font-weight:500">'+r.bulan+'</td>'
+            + '<td style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;color:var(--text-muted)">'+r.hari+' hari</td>'
+            + '<td style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;color:var(--primary);font-weight:700">'+fmtRp(r.dana)+'</td>'
             + '</tr>').join('')
         + '</tbody><tfoot><tr style="background:var(--primary);color:#fff">'
-        + '<td style="padding:8px 12px;font-weight:700">Total</td>'
-        + '<td style="padding:8px 12px;text-align:right;font-weight:700">'+proj.rows.reduce((a,r)=>a+r.hari,0)+' hari</td>'
-        + '<td style="padding:8px 12px;text-align:right;font-weight:700">'+fmtRp(proj.totalDana)+'</td>'
-        + '</tr></tfoot></table></div></div>'
-        + '<div style="display:flex;gap:10px;margin-bottom:14px">'
-        + '<button class="btn btn-outline flex-1" onclick="kalkShare()">'
+        + '<td style="padding:10px 14px;font-weight:700;font-size:13px">Total</td>'
+        + '<td style="padding:10px 14px;text-align:right;font-weight:700">'+proj.rows.reduce((a,r)=>a+r.hari,0)+' hari</td>'
+        + '<td style="padding:10px 14px;text-align:right;font-weight:800;font-size:14px">'+fmtRp(proj.totalDana)+'</td>'
+        + '</tr></tfoot></table></div>'
+        // ── Action buttons ──
+        + '<div style="display:flex;gap:10px;margin-bottom:4px">'
+        + '<button class="btn btn-outline flex-1" id="kalk-share-btn" onclick="kalkShare()">'
         + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>'
-        + ' Share</button>'
+        + ' Share PNG</button>'
         + '<button class="btn btn-primary flex-1" onclick="kalkDaftarkan()">'
         + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>'
-        + ' Simpan sebagai Draft</button>'
+        + ' Simpan Draft</button>'
         + '</div>'
-      : '<div class="card" style="text-align:center;padding:28px;color:var(--text-muted)">'
-        + '<div style="font-size:32px;margin-bottom:8px">&#128202;</div>'
-        + '<div style="font-weight:600;margin-bottom:4px">Hasil proyeksi muncul di sini</div>'
-        + '<div style="font-size:12px">' + (!tglStr ? 'Set tanggal mulai di Pengaturan dulu' : 'Masukkan nominal') + '</div>'
+        + '</div>'
+      : '<div class="card" style="text-align:center;padding:32px 24px;color:var(--text-muted);margin-bottom:14px">'
+        + '<div style="font-size:36px;margin-bottom:10px">&#128202;</div>'
+        + '<div style="font-weight:700;font-size:15px;margin-bottom:6px;color:var(--text)">Hasil proyeksi muncul di sini</div>'
+        + '<div style="font-size:13px">Pilih nominal per hari dan tanggal mulai</div>'
         + '</div>';
 
     return pageHeader('Kalkulator Proyeksi', "go('dashboard')")
       + '<div style="padding:0 16px 80px">'
-      + (!tglStr ? '<div class="card" style="background:#fef3c7;border:1px solid #fde68a;margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:#d97706">&#9888; Tanggal mulai program belum diset</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">Buka Pengaturan &#8594; isi Tanggal Mulai Program.</div></div>' : '')
       + '<div class="card" style="margin-bottom:14px">'
       + '<div class="font-bold mb-3" style="color:var(--primary);font-size:13px;display:flex;align-items:center;gap:6px"><span style="display:block;width:3px;height:14px;background:var(--primary);border-radius:2px"></span>Parameter Tabungan</div>'
       + '<div style="margin-bottom:14px"><div class="form-label">Nominal per Hari</div>'
@@ -2244,13 +2264,21 @@
       + ' value="'+(k.nominal!=='50000'&&k.nominal!=='100000'?k.nominalVal:'')+'"'
       + ' oninput="window._kalk.nominalVal=parseInt(this.value)||0;kalkRender()">'
       + '</div></div>'
-      + '<div style="margin-bottom:4px"><div class="form-label">Durasi</div>'
+      + '<div style="margin-bottom:14px"><div class="form-label">Durasi</div>'
       + '<div style="display:flex;gap:8px">'
       + [['10','10 Bulan'],['12','12 Bulan']].map(([d,label]) =>
           '<button class="pill-btn'+(k.durasi===d?' active':'')+'" data-ktype="durasi" data-kval="'+d+'" onclick="kalkSet(this.dataset.ktype,this.dataset.kval,this)">'+label+'</button>'
         ).join('')
       + '</div></div>'
-      + (tglStr ? '<div style="margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:10px;font-size:12px;color:var(--text-muted)">Tanggal mulai: <strong style="color:var(--text)">' + fmtTgl(new Date(tglStr+'T00:00:00')) + '</strong></div>' : '')
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      + '<div><div class="form-label">Tanggal Mulai</div>'
+      + '<input class="form-ctrl" type="date" id="kalk-tgl-mulai" value="' + tglStr + '"'
+      + ' oninput="window._kalk.tglMulai=this.value;kalkRender()">'
+      + '</div>'
+      + '<div><div class="form-label">Estimasi Selesai</div>'
+      + '<input class="form-ctrl" type="date" id="kalk-tgl-akhir" value="' + (tglAkhirInfo ? tglAkhirInfo.toISOString().slice(0,10) : '') + '" readonly style="background:var(--bg-muted);color:var(--text-muted);cursor:default">'
+      + '</div>'
+      + '</div>'
       + '</div>'
       + previewHtml
       + '</div>';
@@ -2275,38 +2303,59 @@
   function kalkShare() {
     const k = window._kalk;
     const nominal = k.nominal==='50000'?50000 : k.nominal==='100000'?100000 : (k.nominalVal||0);
-    const durasi  = parseInt(k.durasi||'10');
-    const s = db.getSetting();
-    const tglStr = s.tgl_mulai_prog || '';
-    if (!nominal || !tglStr) { showToast('Lengkapi parameter dulu', 'error'); return; }
-    const tgl = new Date(tglStr + 'T00:00:00');
-    const _endM = tgl.getMonth() + durasi;
-    const _endY = tgl.getFullYear() + Math.floor(_endM / 12);
-    const _endMo = _endM % 12;
-    const _lastOfEnd = new Date(_endY, _endMo+1, 0).getDate();
-    const tglAkhir = tgl.getDate() > _lastOfEnd ? new Date(_endY,_endMo,_lastOfEnd) : new Date(_endY,_endMo,tgl.getDate()-1);
-    const totalHari = Math.round((tglAkhir - tgl) / 86400000) + 1;
-    const fmtRp  = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
-    const fmtTgl = d => d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
-    const txt = 'Proyeksi Tabungan\n\n'
-      + 'Nominal/hari : ' + fmtRp(nominal) + '\n'
-      + 'Durasi       : ' + durasi + ' bulan\n'
-      + 'Mulai        : ' + fmtTgl(tgl) + '\n'
-      + 'Selesai      : ' + fmtTgl(tglAkhir) + '\n'
-      + 'Total hari   : ' + totalHari + ' hari\n\n'
-      + 'Total: ' + fmtRp(totalHari * nominal);
-    if (navigator.share) navigator.share({ text: txt });
-    else if (navigator.clipboard) { navigator.clipboard.writeText(txt); showToast('Teks proyeksi disalin!'); }
+    const tglStr = k.tglMulai || '';
+    if (!nominal || !tglStr) { showToast('Lengkapi tanggal mulai dan nominal dulu', 'error'); return; }
+
+    const card = document.getElementById('kalk-preview-card');
+    if (!card) { showToast('Preview tidak ditemukan', 'error'); return; }
+
+    const btn = document.getElementById('kalk-share-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Membuat gambar...'; }
+
+    // Sembunyikan tombol action row saat capture agar tidak ikut masuk gambar
+    const actionRow = card.lastElementChild;
+    if (actionRow) actionRow.style.visibility = 'hidden';
+
+    html2canvas(card, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    }).then(canvas => {
+      if (actionRow) actionRow.style.visibility = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'Share PNG'; }
+
+      canvas.toBlob(blob => {
+        if (!blob) { showToast('Gagal membuat gambar', 'error'); return; }
+        const file = new File([blob], 'proyeksi-tabungan.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: 'Proyeksi Tabungan' })
+            .catch(err => { if (err.name !== 'AbortError') showToast('Gagal share: ' + err.message, 'error'); });
+        } else {
+          // Fallback: download PNG
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'proyeksi-tabungan.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast('Gambar diunduh!');
+        }
+      }, 'image/png');
+    }).catch(err => {
+      if (actionRow) actionRow.style.visibility = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'Share PNG'; }
+      showToast('Gagal render gambar: ' + err.message, 'error');
+    });
   }
 
   function kalkDaftarkan() {
     const k = window._kalk;
     const nominal = k.nominal==='50000'?50000 : k.nominal==='100000'?100000 : (k.nominalVal||0);
     const durasi  = parseInt(k.durasi||'10');
-    const s = db.getSetting();
-    const tglStr = s.tgl_mulai_prog || '';
+    const tglStr = k.tglMulai || '';
     if (!nominal || nominal <= 0) { showToast('Masukkan nominal dulu', 'error'); return; }
-    if (!tglStr) { showToast('Set tanggal mulai di Pengaturan dulu', 'error'); return; }
+    if (!tglStr) { showToast('Masukkan tanggal mulai dulu', 'error'); return; }
     const tgl = new Date(tglStr + 'T00:00:00');
     const _endM = tgl.getMonth() + durasi;
     const _endY = tgl.getFullYear() + Math.floor(_endM / 12);
