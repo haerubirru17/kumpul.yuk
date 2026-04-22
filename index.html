@@ -2349,17 +2349,32 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Membuat gambar...'; }
 
     // ── Canvas setup ──
-    const DPR    = Math.max(window.devicePixelRatio || 2, 2);
-    const W      = 720;                       // lebar logical px
-    const PAD    = 32;
-    const INNER  = W - PAD * 2;
-    const ROW_H  = 44;
-    const HEADER_H = 220;                     // hero area
-    const STAT_H   = 76;
-    const TABLE_HEADER_H = 38;
-    const TABLE_H  = rows.length * ROW_H + TABLE_HEADER_H + ROW_H; // +ROW_H for footer
-    const FOOTER_H = 48;
-    const H = PAD + HEADER_H + STAT_H + 20 + 16 + TABLE_H + 16 + FOOTER_H + PAD;
+    const DPR  = Math.max(window.devicePixelRatio || 2, 2);
+    const W    = 640;           // lebar logical
+    const PAD  = 20;            // outer padding kiri-kanan
+    const INNER = W - PAD * 2; // 600px
+
+    // Kolom tabel: Bulan 52%, Hari 16%, Total 32%
+    const COL_BULAN = Math.floor(INNER * 0.52);
+    const COL_HARI  = Math.floor(INNER * 0.16);
+    const COL_TOTAL = INNER - COL_BULAN - COL_HARI;
+
+    // X positions
+    const X_LEFT   = PAD;                          // kiri card
+    const X_BULAN  = PAD + 16;                     // teks bulan
+    const X_HARI   = PAD + COL_BULAN + COL_HARI/2; // center kolom hari
+    const X_TOTAL  = PAD + INNER - 16;             // kanan kolom total
+
+    const ROW_H         = 40;
+    const TH_H          = 36;
+    const HERO_PAD_V    = 22;
+    const STAT_ROW_H    = 68;  // tinggi tiap baris stat (2 baris × 2 kolom)
+    const HERO_CONTENT  = HERO_PAD_V + 16 + 8 + 36 + 8 + 16 + 12 + STAT_ROW_H*2 + 8 + HERO_PAD_V;
+    const GAP           = 14;
+    const TABLE_TITLE_H = 44;
+    const TABLE_BODY_H  = TH_H + rows.length * ROW_H + ROW_H; // header + rows + footer
+    const TABLE_CARD_H  = TABLE_TITLE_H + TABLE_BODY_H + 12;
+    const H = PAD + HERO_CONTENT + GAP + TABLE_CARD_H + PAD;
 
     const canvas = document.createElement('canvas');
     canvas.width  = W * DPR;
@@ -2377,108 +2392,130 @@
       cx.lineTo(x, y+r); cx.arcTo(x, y, x+r, y, r);
       cx.closePath();
     }
-    function text(str, x, y, font, color, align='left') {
+    function txt(str, x, y, font, color, align='left') {
       cx.font = font; cx.fillStyle = color; cx.textAlign = align;
-      cx.fillText(str, x, y);
+      cx.fillText(String(str), x, y);
     }
+    // Tulis teks dengan clipping agar tidak melebihi maxW
+    function txtClip(str, x, y, font, color, align, maxW) {
+      cx.font = font; cx.fillStyle = color; cx.textAlign = align;
+      cx.save(); cx.beginPath();
+      if (align === 'right') cx.rect(x - maxW, y - 20, maxW, 28);
+      else cx.rect(x, y - 20, maxW, 28);
+      cx.clip();
+      cx.fillText(String(str), x, y);
+      cx.restore();
+    }
+    const F = {
+      label : '600 10px "Plus Jakarta Sans",sans-serif',
+      val   : '700 13px "Plus Jakarta Sans",sans-serif',
+      sm    : '500 12px "Plus Jakarta Sans",sans-serif',
+      smb   : '600 12px "Plus Jakarta Sans",sans-serif',
+      th    : '700 11px "Plus Jakarta Sans",sans-serif',
+      foot  : '700 13px "Plus Jakarta Sans",sans-serif',
+    };
 
-    // ── BG ──
-    cx.fillStyle = '#f1f5f9';
+    // ── BG putih bersih ──
+    cx.fillStyle = '#ffffff';
     cx.fillRect(0, 0, W, H);
 
-    // ── Hero gradient card ──
-    const grad = cx.createLinearGradient(PAD, PAD, PAD+INNER, PAD+HEADER_H+STAT_H);
-    grad.addColorStop(0, '#0c5f73');
-    grad.addColorStop(1, '#0e7490');
-    cx.fillStyle = grad;
-    roundRect(PAD, PAD, INNER, HEADER_H + STAT_H, 20);
-    cx.fill();
+    // ══ HERO CARD ══
+    const heroGrad = cx.createLinearGradient(PAD, PAD, PAD+INNER, PAD+HERO_CONTENT);
+    heroGrad.addColorStop(0, '#0c5f73');
+    heroGrad.addColorStop(1, '#0e7490');
+    cx.fillStyle = heroGrad;
+    roundRect(PAD, PAD, INNER, HERO_CONTENT, 20); cx.fill();
 
-    // subtle circle deco
-    cx.save();
-    cx.globalAlpha = 0.07;
-    cx.fillStyle = '#fff';
-    cx.beginPath(); cx.arc(W - PAD - 20, PAD + 30, 120, 0, Math.PI*2); cx.fill();
+    // circle deco
+    cx.save(); cx.globalAlpha = 0.08; cx.fillStyle = '#fff';
+    cx.beginPath(); cx.arc(W - PAD + 20, PAD - 10, 130, 0, Math.PI*2); cx.fill();
     cx.restore();
 
-    let y = PAD + 24;
+    let hy = PAD + HERO_PAD_V;
 
-    // label
-    text('TOTAL PROYEKSI DANA', PAD+20, y+10, '600 11px "Plus Jakarta Sans", sans-serif', 'rgba(255,255,255,0.65)');
-    y += 28;
+    // "TOTAL PROYEKSI DANA"
+    txt('TOTAL PROYEKSI DANA', PAD+18, hy+12, F.label, 'rgba(255,255,255,0.65)');
+    hy += 24;
 
-    // total dana — besar
-    text(fmtRp(totalDana), PAD+20, y+28, '800 34px "Plus Jakarta Sans", sans-serif', '#ffffff');
-    y += 42;
+    // Nominal besar
+    txt(fmtRp(totalDana), PAD+18, hy+34, '800 32px "Plus Jakarta Sans",sans-serif', '#fff');
+    hy += 44;
 
-    // rentang tanggal
-    text(fmtTgl(tgl) + '  —  ' + fmtTgl(tglAkhir), PAD+20, y+14, '500 12px "Plus Jakarta Sans", sans-serif', 'rgba(255,255,255,0.72)');
-    y += 30;
+    // Rentang tanggal
+    txt(fmtTgl(tgl) + '  —  ' + fmtTgl(tglAkhir), PAD+18, hy+14, '500 12px "Plus Jakarta Sans",sans-serif', 'rgba(255,255,255,0.72)');
+    hy += 26;
 
-    // ── 4 stat boxes 2x2 ──
-    const stats = [
-      ['Total Hari', totalHari + ' hari'],
-      ['Durasi', durasi + ' bulan'],
-      ['Per Hari', fmtRp(nominal)],
-      ['Selesai', fmtTgl(tglAkhir)],
+    // ── 4 stat boxes, 2×2 grid ──
+    const sW = (INNER - 8 - 24) / 2;  // lebar tiap stat box, dengan gap 8
+    const sH = STAT_ROW_H - 8;
+    const stats4 = [
+      ['TOTAL HARI', totalHari + ' hari'],
+      ['DURASI',     durasi + ' bulan'],
+      ['PER HARI',   fmtRp(nominal)],
+      ['SELESAI',    fmtTgl(tglAkhir)],
     ];
-    const sW = (INNER - 12) / 2;
-    const sH = 62;
-    const sY = y + 6;
-    stats.forEach(([label, val], i) => {
-      const sx = PAD + (i % 2) * (sW + 12);
-      const sy = sY + Math.floor(i / 2) * (sH + 8);
-      cx.fillStyle = 'rgba(255,255,255,0.14)';
+    stats4.forEach(([label, val], i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const sx  = PAD + 12 + col * (sW + 8);
+      const sy  = hy + 4 + row * (sH + 8);
+      cx.fillStyle = 'rgba(255,255,255,0.15)';
       roundRect(sx, sy, sW, sH, 12); cx.fill();
-      text(label.toUpperCase(), sx+12, sy+18, '600 9px "Plus Jakarta Sans", sans-serif', 'rgba(255,255,255,0.65)');
-      text(val, sx+12, sy+42, '700 13px "Plus Jakarta Sans", sans-serif', '#ffffff');
+      txt(label, sx+12, sy+18, F.label, 'rgba(255,255,255,0.65)');
+      txt(val,   sx+12, sy+38, F.val,   '#ffffff');
     });
-    y = sY + 2 * (sH + 8) + 4;
 
-    // ── Breakdown table card ──
-    const tableCardY = PAD + HEADER_H + STAT_H + 20;
-    const tableCardH = TABLE_H + 32;
+    // ══ TABLE CARD ══
+    const tcY = PAD + HERO_CONTENT + GAP;
     cx.fillStyle = '#ffffff';
-    roundRect(PAD, tableCardY, INNER, tableCardH, 16); cx.fill();
+    roundRect(PAD, tcY, INNER, TABLE_CARD_H, 16); cx.fill();
+    // border
+    cx.strokeStyle = '#e2e8f0'; cx.lineWidth = 1;
+    roundRect(PAD, tcY, INNER, TABLE_CARD_H, 16); cx.stroke();
 
-    // table title
+    // Table title dengan aksen garis
     cx.fillStyle = '#0e7490';
-    cx.fillRect(PAD+18, tableCardY+16, 3, 16);
-    text('Breakdown per Bulan', PAD+28, tableCardY+29, '700 13px "Plus Jakarta Sans", sans-serif', '#0e7490');
+    cx.fillRect(PAD+16, tcY+14, 3, 16);
+    txt('Breakdown per Bulan', PAD+26, tcY+27, '700 13px "Plus Jakarta Sans",sans-serif', '#0e7490');
 
-    // table header row
-    const thY = tableCardY + 46;
+    // Table header
+    const thY = tcY + TABLE_TITLE_H;
     cx.fillStyle = '#0e7490';
-    roundRect(PAD+12, thY, INNER-24, TABLE_HEADER_H, 8); cx.fill();
-    text('Bulan',  PAD+24,           thY+24, '700 11px "Plus Jakarta Sans", sans-serif', '#ffffff', 'left');
-    text('Hari',   PAD+12+INNER/2,   thY+24, '700 11px "Plus Jakarta Sans", sans-serif', '#ffffff', 'center');
-    text('Total',  PAD+INNER-12,     thY+24, '700 11px "Plus Jakarta Sans", sans-serif', '#ffffff', 'right');
+    cx.fillRect(PAD, thY, INNER, TH_H);
+    txt('Bulan',  X_BULAN,       thY+23, F.th, '#fff', 'left');
+    txt('Hari',   X_HARI,        thY+23, F.th, '#fff', 'center');
+    txt('Total',  X_TOTAL,       thY+23, F.th, '#fff', 'right');
 
-    // table rows
+    // Table rows
     rows.forEach((r, i) => {
-      const ry = thY + TABLE_HEADER_H + i * ROW_H;
+      const ry = thY + TH_H + i * ROW_H;
       cx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-      cx.fillRect(PAD+12, ry, INNER-24, ROW_H);
-      // border bottom
+      cx.fillRect(PAD, ry, INNER, ROW_H);
+      // divider
       cx.fillStyle = '#e2e8f0';
-      cx.fillRect(PAD+12, ry+ROW_H-1, INNER-24, 1);
-      text(r.bulan,          PAD+24,          ry+27, '500 12px "Plus Jakarta Sans", sans-serif', '#0f172a', 'left');
-      text(String(r.hari),   PAD+12+INNER/2,  ry+27, '600 12px "Plus Jakarta Sans", sans-serif', '#64748b', 'center');
-      text(fmtRp(r.dana),    PAD+INNER-12,    ry+27, '700 12px "Plus Jakarta Sans", sans-serif', '#0e7490', 'right');
+      cx.fillRect(PAD, ry + ROW_H - 1, INNER, 1);
+      // teks — bulan dibatasi agar tidak nabrak kolom hari
+      txtClip(r.bulan,        X_BULAN,  ry+25, F.sm,  '#0f172a', 'left',   COL_BULAN - 8);
+      txt(String(r.hari),     X_HARI,   ry+25, F.smb, '#64748b', 'center');
+      txtClip(fmtRp(r.dana),  X_TOTAL,  ry+25, F.smb, '#0e7490', 'right',  COL_TOTAL - 8);
     });
 
-    // footer total row
-    const ftY = thY + TABLE_HEADER_H + rows.length * ROW_H;
+    // Footer row
+    const ftY = thY + TH_H + rows.length * ROW_H;
     cx.fillStyle = '#0e7490';
-    roundRect(PAD+12, ftY, INNER-24, ROW_H, 8); cx.fill();
-    text('Total',                         PAD+24,          ftY+27, '700 13px "Plus Jakarta Sans", sans-serif', '#ffffff', 'left');
-    text(String(rows.reduce((a,r)=>a+r.hari,0)), PAD+12+INNER/2, ftY+27, '700 13px "Plus Jakarta Sans", sans-serif', '#ffffff', 'center');
-    text(fmtRp(totalDana),                PAD+INNER-12,    ftY+27, '800 13px "Plus Jakarta Sans", sans-serif', '#ffffff', 'right');
+    cx.fillRect(PAD, ftY, INNER, ROW_H);
+    // sudut bawah rounded
+    cx.beginPath();
+    cx.moveTo(PAD, ftY);
+    cx.lineTo(PAD+INNER, ftY);
+    cx.lineTo(PAD+INNER, ftY+ROW_H-16); cx.arcTo(PAD+INNER, ftY+ROW_H, PAD+INNER-16, ftY+ROW_H, 16);
+    cx.lineTo(PAD+16, ftY+ROW_H); cx.arcTo(PAD, ftY+ROW_H, PAD, ftY+ROW_H-16, 16);
+    cx.lineTo(PAD, ftY); cx.closePath();
+    cx.fill();
 
-    // ── Footer watermark ──
-    const fY = H - FOOTER_H + 10;
-    cx.fillStyle = 'rgba(100,116,139,0.5)';
-    text('Kumpul.Yuk  ·  Proyeksi Tabungan', W/2, fY+18, '600 11px "Plus Jakarta Sans", sans-serif', 'rgba(100,116,139,0.7)', 'center');
+    txt('Total',                                     X_BULAN, ftY+25, F.foot, '#fff', 'left');
+    txt(String(rows.reduce((a,r)=>a+r.hari,0)),      X_HARI,  ftY+25, F.foot, '#fff', 'center');
+    txtClip(fmtRp(totalDana),                        X_TOTAL, ftY+25, F.foot, '#fff', 'right', COL_TOTAL - 8);
 
     // ── Share / download ──
     canvas.toBlob(blob => {
