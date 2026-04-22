@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -2203,15 +2202,16 @@
     const previewHtml = proj
       ? '<div id="kalk-preview-card" style="margin-bottom:14px">'
         // ── Hero total ──
-        + '<div style="background:linear-gradient(135deg,#0c5f73 0%,#0e7490 100%);border-radius:20px;padding:20px 20px 18px;color:#fff;margin-bottom:12px;box-shadow:0 4px 20px rgba(14,116,144,0.28)">'
-        + '<div style="font-size:10px;font-weight:700;letter-spacing:1.8px;opacity:.7;text-transform:uppercase;margin-bottom:8px">Total Proyeksi Dana</div>'
-        + '<div style="font-size:30px;font-weight:800;letter-spacing:-0.5px;line-height:1;margin-bottom:6px">' + fmtRp(proj.totalDana) + '</div>'
-        + '<div style="font-size:12px;opacity:.75;margin-bottom:18px;font-weight:500">' + fmtTgl(proj.tgl) + ' &mdash; ' + fmtTgl(proj.tglAkhir) + '</div>'
-        + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">'
-        + [['Total Hari',proj.totalHari+' hari'],['Durasi',durasi+' bln'],['Per Hari',fmtRp(nominal)],['Selesai',fmtTgl(proj.tglAkhir)]]
-          .map(([l,v]) => '<div style="background:rgba(255,255,255,.13);border-radius:10px;padding:8px 6px;text-align:center">'
-            + '<div style="font-size:9px;opacity:.65;margin-bottom:3px;font-weight:600;letter-spacing:.04em">'+l+'</div>'
-            + '<div style="font-size:11px;font-weight:700;line-height:1.3">'+v+'</div></div>').join('')
+        + '<div style="background:linear-gradient(135deg,#0c5f73 0%,#0e7490 100%);border-radius:20px;padding:22px 20px 20px;color:#fff;margin-bottom:12px;box-shadow:0 4px 20px rgba(14,116,144,0.28)">'
+        + '<div style="font-size:10px;font-weight:700;letter-spacing:1.8px;opacity:.7;text-transform:uppercase;margin-bottom:10px">Total Proyeksi Dana</div>'
+        + '<div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;line-height:1;margin-bottom:6px">' + fmtRp(proj.totalDana) + '</div>'
+        + '<div style="font-size:12px;opacity:.75;margin-bottom:20px;font-weight:500">' + fmtTgl(proj.tgl) + ' &mdash; ' + fmtTgl(proj.tglAkhir) + '</div>'
+        // ── 2x2 stat grid — lebih proporsional ──
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+        + [['Total Hari', proj.totalHari + ' hari'], ['Durasi', durasi + ' bulan'], ['Per Hari', fmtRp(nominal)], ['Selesai', fmtTgl(proj.tglAkhir)]]
+          .map(([l,v]) => '<div style="background:rgba(255,255,255,.15);border-radius:12px;padding:10px 14px">'
+            + '<div style="font-size:10px;opacity:.7;margin-bottom:3px;font-weight:600;letter-spacing:.04em;text-transform:uppercase">'+l+'</div>'
+            + '<div style="font-size:13px;font-weight:700;line-height:1.3">'+v+'</div></div>').join('')
         + '</div></div>'
         // ── Breakdown table ──
         + '<div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">'
@@ -2219,18 +2219,18 @@
         + '<span style="display:block;width:3px;height:14px;background:var(--primary);border-radius:2px"></span>Breakdown per Bulan</div>'
         + '<table style="width:100%;border-collapse:collapse;font-size:13px">'
         + '<thead><tr style="background:var(--primary);color:#fff">'
-        + '<th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:700">Bulan</th>'
-        + '<th style="padding:8px 14px;text-align:right;font-size:11px;font-weight:700">Hari</th>'
-        + '<th style="padding:8px 14px;text-align:right;font-size:11px;font-weight:700">Total</th>'
+        + '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700">Bulan</th>'
+        + '<th style="padding:9px 14px;text-align:center;font-size:11px;font-weight:700">Hari</th>'
+        + '<th style="padding:9px 14px;text-align:right;font-size:11px;font-weight:700">Total</th>'
         + '</tr></thead><tbody>'
         + proj.rows.map((r,i) => '<tr style="background:'+(i%2===0?'var(--bg-card)':'var(--bg-muted)')+'">'
-            + '<td style="padding:9px 14px;border-bottom:1px solid var(--border);font-weight:500">'+r.bulan+'</td>'
-            + '<td style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;color:var(--text-muted)">'+r.hari+' hari</td>'
-            + '<td style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;color:var(--primary);font-weight:700">'+fmtRp(r.dana)+'</td>'
+            + '<td style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:500">'+r.bulan+'</td>'
+            + '<td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:center;color:var(--text-muted);font-weight:600">'+r.hari+'</td>'
+            + '<td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:right;color:var(--primary);font-weight:700">'+fmtRp(r.dana)+'</td>'
             + '</tr>').join('')
         + '</tbody><tfoot><tr style="background:var(--primary);color:#fff">'
         + '<td style="padding:10px 14px;font-weight:700;font-size:13px">Total</td>'
-        + '<td style="padding:10px 14px;text-align:right;font-weight:700">'+proj.rows.reduce((a,r)=>a+r.hari,0)+' hari</td>'
+        + '<td style="padding:10px 14px;text-align:center;font-weight:700">'+proj.rows.reduce((a,r)=>a+r.hari,0)+'</td>'
         + '<td style="padding:10px 14px;text-align:right;font-weight:800;font-size:14px">'+fmtRp(proj.totalDana)+'</td>'
         + '</tr></tfoot></table></div>'
         // ── Action buttons ──
@@ -2251,32 +2251,43 @@
 
     return pageHeader('Kalkulator Proyeksi', "go('dashboard')")
       + '<div style="padding:0 16px 80px">'
-      + '<div class="card" style="margin-bottom:14px">'
-      + '<div class="font-bold mb-3" style="color:var(--primary);font-size:13px;display:flex;align-items:center;gap:6px"><span style="display:block;width:3px;height:14px;background:var(--primary);border-radius:2px"></span>Parameter Tabungan</div>'
-      + '<div style="margin-bottom:14px"><div class="form-label">Nominal per Hari</div>'
+      // ── Parameter card — padding & spacing diperbaiki ──
+      + '<div class="card p-5" style="margin-bottom:14px">'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'
+      + '<span style="display:block;width:3px;height:16px;background:var(--primary);border-radius:2px"></span>'
+      + '<span style="font-size:14px;font-weight:700;color:var(--primary)">Parameter Tabungan</span>'
+      + '</div>'
+      // Nominal
+      + '<div style="margin-bottom:16px">'
+      + '<div class="form-label" style="margin-bottom:8px">Nominal per Hari</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
       + [['50000','Rp 50.000'],['100000','Rp 100.000'],['custom','Custom']].map(([n,label]) =>
           '<button class="pill-btn'+(k.nominal===n?' active':'')+'" data-ktype="nominal" data-kval="'+n+'" onclick="kalkSet(this.dataset.ktype,this.dataset.kval,this)">'+label+'</button>'
         ).join('')
       + '</div>'
-      + '<div id="kalk-custom-wrap" style="display:'+(k.nominal!=='50000'&&k.nominal!=='100000'?'block':'none')+';margin-top:8px">'
-      + '<input class="form-ctrl" type="number" id="kalk-nominal-val" placeholder="Nominal per hari" min="1000" step="1000"'
+      + '<div id="kalk-custom-wrap" style="display:'+(k.nominal!=='50000'&&k.nominal!=='100000'?'block':'none')+';margin-top:10px">'
+      + '<input class="form-ctrl" type="number" id="kalk-nominal-val" placeholder="Masukkan nominal per hari" min="1000" step="1000"'
       + ' value="'+(k.nominal!=='50000'&&k.nominal!=='100000'?k.nominalVal:'')+'"'
       + ' oninput="window._kalk.nominalVal=parseInt(this.value)||0;kalkRender()">'
       + '</div></div>'
-      + '<div style="margin-bottom:14px"><div class="form-label">Durasi</div>'
+      // Durasi
+      + '<div style="margin-bottom:16px">'
+      + '<div class="form-label" style="margin-bottom:8px">Durasi</div>'
       + '<div style="display:flex;gap:8px">'
       + [['10','10 Bulan'],['12','12 Bulan']].map(([d,label]) =>
           '<button class="pill-btn'+(k.durasi===d?' active':'')+'" data-ktype="durasi" data-kval="'+d+'" onclick="kalkSet(this.dataset.ktype,this.dataset.kval,this)">'+label+'</button>'
         ).join('')
       + '</div></div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-      + '<div><div class="form-label">Tanggal Mulai</div>'
+      // Tanggal — 2 kolom proporsional
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + '<div>'
+      + '<div class="form-label" style="margin-bottom:8px">Tanggal Mulai</div>'
       + '<input class="form-ctrl" type="date" id="kalk-tgl-mulai" value="' + tglStr + '"'
       + ' oninput="window._kalk.tglMulai=this.value;kalkRender()">'
       + '</div>'
-      + '<div><div class="form-label">Estimasi Selesai</div>'
-      + '<input class="form-ctrl" type="date" id="kalk-tgl-akhir" value="' + (tglAkhirInfo ? tglAkhirInfo.toISOString().slice(0,10) : '') + '" readonly style="background:var(--bg-muted);color:var(--text-muted);cursor:default">'
+      + '<div>'
+      + '<div class="form-label" style="margin-bottom:8px">Estimasi Selesai</div>'
+      + '<input class="form-ctrl" type="date" id="kalk-tgl-akhir" value="' + (tglAkhirInfo ? tglAkhirInfo.toISOString().slice(0,10) : '') + '" readonly style="opacity:.6;cursor:default">'
       + '</div>'
       + '</div>'
       + '</div>'
@@ -2303,50 +2314,188 @@
   function kalkShare() {
     const k = window._kalk;
     const nominal = k.nominal==='50000'?50000 : k.nominal==='100000'?100000 : (k.nominalVal||0);
-    const tglStr = k.tglMulai || '';
+    const durasi  = parseInt(k.durasi||'10');
+    const tglStr  = k.tglMulai || '';
     if (!nominal || !tglStr) { showToast('Lengkapi tanggal mulai dan nominal dulu', 'error'); return; }
 
-    const card = document.getElementById('kalk-preview-card');
-    if (!card) { showToast('Preview tidak ditemukan', 'error'); return; }
+    // ── Hitung proyeksi ──
+    const tgl = new Date(tglStr + 'T00:00:00');
+    const _endM = tgl.getMonth() + durasi;
+    const _endY = tgl.getFullYear() + Math.floor(_endM / 12);
+    const _endMo = _endM % 12;
+    const _lastOfEnd = new Date(_endY, _endMo+1, 0).getDate();
+    const tglAkhir = tgl.getDate() > _lastOfEnd
+      ? new Date(_endY, _endMo, _lastOfEnd)
+      : new Date(_endY, _endMo, tgl.getDate()-1);
+    const totalHari = Math.round((tglAkhir - tgl) / 86400000) + 1;
+    const rows = [];
+    let cur = new Date(tgl);
+    while (cur <= tglAkhir) {
+      const yr = cur.getFullYear(), mo = cur.getMonth();
+      const lastOfMonth = new Date(yr, mo+1, 0).getDate();
+      const isLast = (yr === tglAkhir.getFullYear() && mo === tglAkhir.getMonth());
+      const dayEnd = isLast ? tglAkhir.getDate() : lastOfMonth;
+      const hari = dayEnd - cur.getDate() + 1;
+      rows.push({ bulan: new Date(yr,mo,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'}), hari, dana: hari*nominal });
+      if (isLast) break;
+      cur = new Date(yr, mo+1, 1);
+    }
+    const totalDana = totalHari * nominal;
+
+    const fmtRp  = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const fmtTgl = d => d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
 
     const btn = document.getElementById('kalk-share-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Membuat gambar...'; }
 
-    // Sembunyikan tombol action row saat capture agar tidak ikut masuk gambar
-    const actionRow = card.lastElementChild;
-    if (actionRow) actionRow.style.visibility = 'hidden';
+    // ── Canvas setup ──
+    const DPR    = Math.max(window.devicePixelRatio || 2, 2);
+    const W      = 720;                       // lebar logical px
+    const PAD    = 32;
+    const INNER  = W - PAD * 2;
+    const ROW_H  = 44;
+    const HEADER_H = 220;                     // hero area
+    const STAT_H   = 76;
+    const TABLE_HEADER_H = 38;
+    const TABLE_H  = rows.length * ROW_H + TABLE_HEADER_H + ROW_H; // +ROW_H for footer
+    const FOOTER_H = 48;
+    const H = PAD + HEADER_H + STAT_H + 20 + 16 + TABLE_H + 16 + FOOTER_H + PAD;
 
-    html2canvas(card, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    }).then(canvas => {
-      if (actionRow) actionRow.style.visibility = '';
-      if (btn) { btn.disabled = false; btn.textContent = 'Share PNG'; }
+    const canvas = document.createElement('canvas');
+    canvas.width  = W * DPR;
+    canvas.height = H * DPR;
+    const cx = canvas.getContext('2d');
+    cx.scale(DPR, DPR);
 
-      canvas.toBlob(blob => {
-        if (!blob) { showToast('Gagal membuat gambar', 'error'); return; }
-        const file = new File([blob], 'proyeksi-tabungan.png', { type: 'image/png' });
+    // ── Helpers ──
+    function roundRect(x, y, w, h, r) {
+      cx.beginPath();
+      cx.moveTo(x+r, y);
+      cx.lineTo(x+w-r, y); cx.arcTo(x+w, y, x+w, y+r, r);
+      cx.lineTo(x+w, y+h-r); cx.arcTo(x+w, y+h, x+w-r, y+h, r);
+      cx.lineTo(x+r, y+h); cx.arcTo(x, y+h, x, y+h-r, r);
+      cx.lineTo(x, y+r); cx.arcTo(x, y, x+r, y, r);
+      cx.closePath();
+    }
+    function text(str, x, y, font, color, align='left') {
+      cx.font = font; cx.fillStyle = color; cx.textAlign = align;
+      cx.fillText(str, x, y);
+    }
 
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          navigator.share({ files: [file], title: 'Proyeksi Tabungan' })
-            .catch(err => { if (err.name !== 'AbortError') showToast('Gagal share: ' + err.message, 'error'); });
-        } else {
-          // Fallback: download PNG
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = 'proyeksi-tabungan.png';
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          showToast('Gambar diunduh!');
-        }
-      }, 'image/png');
-    }).catch(err => {
-      if (actionRow) actionRow.style.visibility = '';
-      if (btn) { btn.disabled = false; btn.textContent = 'Share PNG'; }
-      showToast('Gagal render gambar: ' + err.message, 'error');
+    // ── BG ──
+    cx.fillStyle = '#f1f5f9';
+    cx.fillRect(0, 0, W, H);
+
+    // ── Hero gradient card ──
+    const grad = cx.createLinearGradient(PAD, PAD, PAD+INNER, PAD+HEADER_H+STAT_H);
+    grad.addColorStop(0, '#0c5f73');
+    grad.addColorStop(1, '#0e7490');
+    cx.fillStyle = grad;
+    roundRect(PAD, PAD, INNER, HEADER_H + STAT_H, 20);
+    cx.fill();
+
+    // subtle circle deco
+    cx.save();
+    cx.globalAlpha = 0.07;
+    cx.fillStyle = '#fff';
+    cx.beginPath(); cx.arc(W - PAD - 20, PAD + 30, 120, 0, Math.PI*2); cx.fill();
+    cx.restore();
+
+    let y = PAD + 24;
+
+    // label
+    text('TOTAL PROYEKSI DANA', PAD+20, y+10, '600 11px "Plus Jakarta Sans", sans-serif', 'rgba(255,255,255,0.65)');
+    y += 28;
+
+    // total dana — besar
+    text(fmtRp(totalDana), PAD+20, y+28, '800 34px "Plus Jakarta Sans", sans-serif', '#ffffff');
+    y += 42;
+
+    // rentang tanggal
+    text(fmtTgl(tgl) + '  —  ' + fmtTgl(tglAkhir), PAD+20, y+14, '500 12px "Plus Jakarta Sans", sans-serif', 'rgba(255,255,255,0.72)');
+    y += 30;
+
+    // ── 4 stat boxes 2x2 ──
+    const stats = [
+      ['Total Hari', totalHari + ' hari'],
+      ['Durasi', durasi + ' bulan'],
+      ['Per Hari', fmtRp(nominal)],
+      ['Selesai', fmtTgl(tglAkhir)],
+    ];
+    const sW = (INNER - 12) / 2;
+    const sH = 62;
+    const sY = y + 6;
+    stats.forEach(([label, val], i) => {
+      const sx = PAD + (i % 2) * (sW + 12);
+      const sy = sY + Math.floor(i / 2) * (sH + 8);
+      cx.fillStyle = 'rgba(255,255,255,0.14)';
+      roundRect(sx, sy, sW, sH, 12); cx.fill();
+      text(label.toUpperCase(), sx+12, sy+18, '600 9px "Plus Jakarta Sans", sans-serif', 'rgba(255,255,255,0.65)');
+      text(val, sx+12, sy+42, '700 13px "Plus Jakarta Sans", sans-serif', '#ffffff');
     });
+    y = sY + 2 * (sH + 8) + 4;
+
+    // ── Breakdown table card ──
+    const tableCardY = PAD + HEADER_H + STAT_H + 20;
+    const tableCardH = TABLE_H + 32;
+    cx.fillStyle = '#ffffff';
+    roundRect(PAD, tableCardY, INNER, tableCardH, 16); cx.fill();
+
+    // table title
+    cx.fillStyle = '#0e7490';
+    cx.fillRect(PAD+18, tableCardY+16, 3, 16);
+    text('Breakdown per Bulan', PAD+28, tableCardY+29, '700 13px "Plus Jakarta Sans", sans-serif', '#0e7490');
+
+    // table header row
+    const thY = tableCardY + 46;
+    cx.fillStyle = '#0e7490';
+    roundRect(PAD+12, thY, INNER-24, TABLE_HEADER_H, 8); cx.fill();
+    text('Bulan',  PAD+24,           thY+24, '700 11px "Plus Jakarta Sans", sans-serif', '#ffffff', 'left');
+    text('Hari',   PAD+12+INNER/2,   thY+24, '700 11px "Plus Jakarta Sans", sans-serif', '#ffffff', 'center');
+    text('Total',  PAD+INNER-12,     thY+24, '700 11px "Plus Jakarta Sans", sans-serif', '#ffffff', 'right');
+
+    // table rows
+    rows.forEach((r, i) => {
+      const ry = thY + TABLE_HEADER_H + i * ROW_H;
+      cx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+      cx.fillRect(PAD+12, ry, INNER-24, ROW_H);
+      // border bottom
+      cx.fillStyle = '#e2e8f0';
+      cx.fillRect(PAD+12, ry+ROW_H-1, INNER-24, 1);
+      text(r.bulan,          PAD+24,          ry+27, '500 12px "Plus Jakarta Sans", sans-serif', '#0f172a', 'left');
+      text(String(r.hari),   PAD+12+INNER/2,  ry+27, '600 12px "Plus Jakarta Sans", sans-serif', '#64748b', 'center');
+      text(fmtRp(r.dana),    PAD+INNER-12,    ry+27, '700 12px "Plus Jakarta Sans", sans-serif', '#0e7490', 'right');
+    });
+
+    // footer total row
+    const ftY = thY + TABLE_HEADER_H + rows.length * ROW_H;
+    cx.fillStyle = '#0e7490';
+    roundRect(PAD+12, ftY, INNER-24, ROW_H, 8); cx.fill();
+    text('Total',                         PAD+24,          ftY+27, '700 13px "Plus Jakarta Sans", sans-serif', '#ffffff', 'left');
+    text(String(rows.reduce((a,r)=>a+r.hari,0)), PAD+12+INNER/2, ftY+27, '700 13px "Plus Jakarta Sans", sans-serif', '#ffffff', 'center');
+    text(fmtRp(totalDana),                PAD+INNER-12,    ftY+27, '800 13px "Plus Jakarta Sans", sans-serif', '#ffffff', 'right');
+
+    // ── Footer watermark ──
+    const fY = H - FOOTER_H + 10;
+    cx.fillStyle = 'rgba(100,116,139,0.5)';
+    text('Kumpul.Yuk  ·  Proyeksi Tabungan', W/2, fY+18, '600 11px "Plus Jakarta Sans", sans-serif', 'rgba(100,116,139,0.7)', 'center');
+
+    // ── Share / download ──
+    canvas.toBlob(blob => {
+      if (btn) { btn.disabled = false; btn.textContent = 'Share PNG'; }
+      if (!blob) { showToast('Gagal membuat gambar', 'error'); return; }
+      const file = new File([blob], 'proyeksi-tabungan.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Proyeksi Tabungan' })
+          .catch(err => { if (err.name !== 'AbortError') showToast('Gagal share: ' + err.message, 'error'); });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'proyeksi-tabungan.png'; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('Gambar diunduh!');
+      }
+    }, 'image/png');
   }
 
   function kalkDaftarkan() {
